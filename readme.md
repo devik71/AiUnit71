@@ -353,3 +353,30 @@ AiUnit71 дотримується:
 MIT License
 Див. файл LICENSE.
 
+
+
+.env dummy:
+
+# Формат: НАЗВА_СЕРВІСУ_API_KEY=ваш_ключ
+
+OPENROUTER_API_KEY=ваш_ключ_тут
+GROK_API_KEY=ваш_ключ_тут
+OPENAI_API_KEY=ваш_ключ_тут
+CLAUDE_API_KEY=ваш_ключ_тут
+NOTION_API_KEY=ваш_ключ_тут
+N8N_API_KEY=ваш_ключ_тут
+KREA_API_KEY=ваш_ключ_тут
+GEMINI_API_KEY=ваш_ключ_тут
+WIX_API_KEY=ваш_ключ_тут
+FREEPIC_API_KEY=ваш_ключ_тут
+TOPAZ_API_KEY=ваш_ключ_тут
+NANOBANANA_API_KEY=ваш_ключ_тут
+LUMALABS_API_KEY=ваш_ключ_тут
+MIDJOURNEY_API_KEY=ваш_ключ_тут
+HIGGSFIELD_API_KEY=ваш_ключ_тут
+COMFYUI_API_KEY=ваш_ключ_тут
+WEAVY_API_KEY=ваш_ключ_тут
+
+
+
+
