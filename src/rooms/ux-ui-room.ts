@@ -1,8 +1,11 @@
-import type { RoomConfig, Task } from "../core/types.js";
+import type { RoomConfig, Task, CostRecord } from "../core/types.js";
 import { AutonomyLevel } from "../core/types.js";
 import { BaseRoom } from "./base-room.js";
 import type { MemoryStore } from "../memory/memory-store.js";
 import type { CostRouter } from "../cost/router.js";
+import { LlmClient } from "../llm/llm-client.js";
+import type { ChatMessage } from "../llm/llm-client.js";
+import { eventBus } from "../core/event-bus.js";
 
 const CONFIG: RoomConfig = {
   id: "ux-ui",
@@ -37,8 +40,11 @@ const CONFIG: RoomConfig = {
 };
 
 export class UxUiRoom extends BaseRoom {
+  private llm: LlmClient;
+
   constructor(memory: MemoryStore, costRouter: CostRouter) {
     super(CONFIG, memory, costRouter);
+    this.llm = new LlmClient();
   }
 
   protected async processTask(task: Task): Promise<Record<string, unknown>> {
@@ -49,13 +55,65 @@ export class UxUiRoom extends BaseRoom {
       minQuality: 75,
     });
 
-    return {
-      wireframes: [],
-      designTokens: null,
-      prototypePlan: null,
-      model: route.selected.model,
-      costEstimate: route.estimate,
-      status: "ready_for_design_tool_integration",
-    };
+    const agent = this.state.agents.find((a) => a.config.role === "ux");
+    const systemPrompt = agent?.config.systemPrompt ?? CONFIG.defaultAgents[0].systemPrompt;
+
+    const messages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      {
+        role: "user",
+        content: [
+          `Task: ${task.title}`,
+          `Description: ${task.description}`,
+          "",
+          "Create a UX/UI design specification:",
+          "1. Wireframe descriptions (each screen/component)",
+          "2. User flow diagram (text-based)",
+          "3. Design tokens (colors, typography, spacing)",
+          "4. Responsive breakpoints and behavior",
+          "5. Interaction patterns and micro-animations",
+        ].join("\n"),
+      },
+    ];
+
+    try {
+      const response = await this.llm.chat({
+        model: route.selected.model,
+        messages,
+        temperature: 0.7,
+        maxTokens: 5000,
+      });
+
+      const costRecord: CostRecord = {
+        taskId: task.id,
+        model: response.model,
+        provider: route.selected.provider.name,
+        inputTokens: response.usage.inputTokens,
+        outputTokens: response.usage.outputTokens,
+        costUsd: route.estimate.estimatedCostUsd,
+        timestamp: new Date(),
+      };
+      eventBus.dispatch({ type: "cost:recorded", record: costRecord });
+
+      return {
+        designSpec: response.content,
+        model: response.model,
+        usage: response.usage,
+        latencyMs: response.latencyMs,
+        costEstimate: route.estimate,
+        status: "completed",
+      };
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      this.log.warn(`LLM call failed, returning stub: ${errMsg}`);
+      return {
+        wireframes: [],
+        designTokens: null,
+        model: route.selected.model,
+        costEstimate: route.estimate,
+        status: "llm_unavailable",
+        error: errMsg,
+      };
+    }
   }
 }

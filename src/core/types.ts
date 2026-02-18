@@ -127,6 +127,15 @@ export interface RoomState {
   status: "idle" | "active" | "paused" | "error";
 }
 
+// ─── Skill Definitions ─────────────────────────────────────────────
+export interface SkillRef {
+  owner: string;
+  slug: string;
+  displayName: string;
+  acquiredAt: Date;
+  proficiency: "novice" | "intermediate" | "expert";
+}
+
 // ─── Agent Definitions ─────────────────────────────────────────────
 export interface AgentConfig {
   id: string;
@@ -135,6 +144,7 @@ export interface AgentConfig {
   systemPrompt: string;
   preferredModel?: string;
   capabilities: ModelCapability[];
+  skills?: SkillRef[];
   canTeleport: boolean;
 }
 
@@ -178,6 +188,9 @@ export type OrchestratorEvent =
   | { type: "room:created"; roomId: string }
   | { type: "room:activated"; roomId: string }
   | { type: "agent:teleported"; agentId: string; fromRoom: string; toRoom: string }
+  | { type: "agent:created"; agentId: string; roomId: string }
+  | { type: "agent:skill_acquired"; agentId: string; skill: SkillRef }
+  | { type: "room:dynamically_created"; roomId: string; roomName: string }
   | { type: "cost:recorded"; record: CostRecord }
   | { type: "hitl:approval_required"; taskId: string; action: string }
   | { type: "hitl:approved"; taskId: string }

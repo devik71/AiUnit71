@@ -15,9 +15,11 @@ import { Planner } from "../planner/planner.js";
 import { HitlManager } from "../hitl/hitl-manager.js";
 import { BaseRoom } from "../rooms/base-room.js";
 import {
+  BriefingRoom,
   BrainstormRoom,
   CopywritingRoom,
   ImageGenRoom,
+  JobMasterRoom,
   UxUiRoom,
   AnimationRoom,
   VideoRoom,
@@ -25,7 +27,13 @@ import {
   MusicAudioRoom,
   CodeDeployRoom,
   CostRoutingRoom,
+  EvaluationRoom,
+  FinalizerRoom,
+  HitlRoom,
 } from "../rooms/index.js";
+import { LearningRoom } from "../rooms/learning-room.js";
+import { RecruiterRoom } from "../rooms/recruiter-room.js";
+import { ReportMasterRoom } from "../rooms/reportmaster-room.js";
 
 export interface OrchestratorConfig {
   autonomyLevel?: AutonomyLevel;
@@ -78,9 +86,11 @@ export class Orchestrator {
 
   private initializeRooms(): void {
     const roomInstances: BaseRoom[] = [
+      new BriefingRoom(this.memory, this.costRouter),
       new BrainstormRoom(this.memory, this.costRouter),
       new CopywritingRoom(this.memory, this.costRouter),
       new ImageGenRoom(this.memory, this.costRouter),
+      new JobMasterRoom(this.memory, this.costRouter),
       new UxUiRoom(this.memory, this.costRouter),
       new AnimationRoom(this.memory, this.costRouter),
       new VideoRoom(this.memory, this.costRouter),
@@ -88,6 +98,12 @@ export class Orchestrator {
       new MusicAudioRoom(this.memory, this.costRouter),
       new CodeDeployRoom(this.memory, this.costRouter),
       new CostRoutingRoom(this.memory, this.costRouter),
+      new EvaluationRoom(this.memory, this.costRouter),
+      new FinalizerRoom(this.memory, this.costRouter),
+      new HitlRoom(this.memory, this.costRouter),
+      new LearningRoom(this.memory, this.costRouter),
+      new RecruiterRoom(this.memory, this.costRouter),
+      new ReportMasterRoom(this.memory, this.costRouter),
     ];
 
     for (const room of roomInstances) {
@@ -95,6 +111,20 @@ export class Orchestrator {
       eventBus.dispatch({ type: "room:created", roomId: room.id });
     }
   }
+
+  /** Register a dynamically created room at runtime */
+  registerRoom(room: BaseRoom): void {
+    if (this.rooms.has(room.id)) {
+      logger.warn(`Room ${room.id} already exists, skipping registration`);
+      return;
+    }
+    this.rooms.set(room.id, room);
+    // Update planner with new room set
+    this.planner = new Planner(this.rooms);
+    eventBus.dispatch({ type: "room:dynamically_created", roomId: room.id, roomName: room.name });
+    logger.info(`Dynamically registered room: ${room.name} (${room.id})`);
+  }
+
 
   /** Get a room by ID */
   getRoom(roomId: string): BaseRoom | undefined {
@@ -306,6 +336,11 @@ export class Orchestrator {
   /** Get memory store */
   getMemory(): MemoryStore {
     return this.memory;
+  }
+
+  /** Get cost router */
+  getCostRouter(): CostRouter {
+    return this.costRouter;
   }
 
   /** Export all room memories as Markdown */

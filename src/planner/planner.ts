@@ -10,29 +10,43 @@ import type { BaseRoom } from "../rooms/base-room.js";
 
 /** Room capability mapping for routing decisions */
 const ROOM_CAPABILITY_MAP: Record<string, ModelCapability[]> = {
+  briefing: ["text-generation", "analysis"],
   brainstorm: ["text-generation", "analysis"],
   copywriting: ["text-generation"],
   "image-gen": ["image-generation"],
+  jobmaster: ["text-generation", "analysis"],
   "ux-ui": ["text-generation", "image-generation"],
   animation: ["text-generation", "image-generation"],
   video: ["video-generation"],
   "3d-render": ["3d-generation", "code-generation"],
   "music-audio": ["audio-generation", "voice-cloning"],
   "code-deploy": ["code-generation"],
+  evaluation: ["text-generation", "analysis"],
+  finalizer: ["text-generation", "analysis"],
+  reportmaster: ["text-generation", "analysis"],
   "cost-routing": ["analysis"],
+  learning: ["text-generation", "analysis"],
+  recruiter: ["text-generation", "analysis"],
 };
 
 /** Keywords that map to specific rooms */
 const KEYWORD_ROOM_MAP: Record<string, string[]> = {
+  briefing: ["brief", "briefing", "project request", "client request", "order", "замовлення", "бріф"],
   brainstorm: ["brainstorm", "idea", "concept", "moodboard", "creative direction"],
   copywriting: ["copy", "text", "write", "blog", "ad copy", "script", "lyrics", "smm", "caption", "post"],
   "image-gen": ["image", "photo", "picture", "illustration", "graphic", "visual", "banner", "poster"],
+  jobmaster: ["distribute", "assign", "роздача", "розподіл", "plan tasks", "execution plan", "task list"],
   "ux-ui": ["ui", "ux", "design", "wireframe", "prototype", "layout", "interface", "figma", "brandbook"],
   animation: ["animate", "animation", "lottie", "motion", "mascot animation", "loading"],
   video: ["video", "clip", "reel", "music video", "commercial", "trailer"],
   "3d-render": ["3d", "render", "model", "blender", "mesh", "texture"],
   "music-audio": ["music", "song", "audio", "voice", "jingle", "podcast", "sound"],
   "code-deploy": ["code", "deploy", "website", "app", "api", "skill", "next.js", "vercel"],
+  evaluation: ["evaluate", "quality", "qa", "score", "оцінка", "якість", "перевірка"],
+  reportmaster: ["report", "звіт", "summary", "підсумок", "quality control"],
+  finalizer: ["finalize", "deliver", "package", "фіналізація", "поставка", "архів"],
+  learning: ["learn", "skill", "train", "acquire", "teach", "study", "master"],
+  recruiter: ["hire", "recruit", "create agent", "new agent", "specialist", "build a", "need a"],
 };
 
 export interface PlannerResult {

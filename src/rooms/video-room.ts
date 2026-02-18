@@ -1,22 +1,25 @@
-import type { RoomConfig, Task } from "../core/types.js";
+import type { RoomConfig, Task, CostRecord } from "../core/types.js";
 import { AutonomyLevel } from "../core/types.js";
 import { BaseRoom } from "./base-room.js";
 import type { MemoryStore } from "../memory/memory-store.js";
 import type { CostRouter } from "../cost/router.js";
+import { LlmClient } from "../llm/llm-client.js";
+import type { ChatMessage } from "../llm/llm-client.js";
+import { eventBus } from "../core/event-bus.js";
 
 const CONFIG: RoomConfig = {
   id: "video",
   name: "Video Production Room",
   description:
-    "Video generation via Veo 3.1, Kling, Luma Dream Machine, Higgsfield, Sora 2. Editing, transitions, music video assembly.",
-  capabilities: ["video-generation"],
+    "Runway/Kling video generation, storyboarding, shot lists, video scripts, b-roll planning.",
+  capabilities: ["video-generation", "text-generation"],
   defaultAgents: [
     {
       id: "video-director",
       name: "Video Director",
       role: "director",
       systemPrompt:
-        "You are a video director. Plan shots, transitions, and narrative flow. Break video projects into scene-by-scene production plans with specific generation parameters.",
+        "You are a video director. Create detailed shot lists, storyboards, and video generation prompts. Specify camera angles, movement, pacing, and visual style for AI video generation.",
       capabilities: ["text-generation", "video-generation"],
       canTeleport: true,
     },
@@ -25,58 +28,100 @@ const CONFIG: RoomConfig = {
       name: "Video Editor",
       role: "editor",
       systemPrompt:
-        "You are a video editor. Assemble generated clips, add transitions, sync audio, and ensure pacing. Output timeline specifications and editing scripts.",
-      capabilities: ["text-generation", "video-generation"],
+        "You are a video editor. Plan transitions, pacing, and post-production workflows. Ensure visual coherence and storytelling flow.",
+      capabilities: ["text-generation"],
       canTeleport: false,
     },
   ],
-  tools: [
-    { id: "veo", name: "Veo 3.1", description: "Google video generation", type: "api", costPerUse: 0.05 },
-    { id: "kling", name: "Kling v2", description: "Kling video generation", type: "api", costPerUse: 0.03 },
-    { id: "luma", name: "Luma Dream Machine", description: "Luma video gen", type: "api", costPerUse: 0.025 },
-    { id: "sora", name: "Sora 2", description: "OpenAI video generation", type: "api", costPerUse: 0.06 },
-  ],
+  tools: [],
   memoryPath: "./memory/video",
   maxConcurrentTasks: 3,
   autonomyLevel: AutonomyLevel.SUPERVISED,
 };
 
 export class VideoRoom extends BaseRoom {
+  private llm: LlmClient;
+
   constructor(memory: MemoryStore, costRouter: CostRouter) {
     super(CONFIG, memory, costRouter);
+    this.llm = new LlmClient();
   }
 
   protected async processTask(task: Task): Promise<Record<string, unknown>> {
-    const quality = (task.input.quality as string) || "standard";
-
-    // Route script/planning through text model
     const scriptRoute = this.routeModel({
       capabilities: ["text-generation"],
       inputTokens: 2000,
-      outputTokens: 3000,
+      outputTokens: 4000,
       preferLocal: true,
-      minQuality: 60,
+      minQuality: 65,
     });
 
-    // Route video generation through video model
     const videoRoute = this.routeModel({
       capabilities: ["video-generation"],
-      inputTokens: 1, // 1 clip
+      inputTokens: 1,
       outputTokens: 0,
-      minQuality: quality === "premium" ? 88 : 78,
+      minQuality: 80,
     });
 
-    return {
-      scriptModel: scriptRoute.selected.model,
-      videoModel: videoRoute.selected.model,
-      scenes: [],
-      timeline: null,
-      costEstimate: {
-        scriptCost: scriptRoute.estimate.estimatedCostUsd,
-        videoCost: videoRoute.estimate.estimatedCostUsd,
-        total: scriptRoute.estimate.estimatedCostUsd + videoRoute.estimate.estimatedCostUsd,
+    const agent = this.state.agents.find((a) => a.config.role === "director");
+    const systemPrompt = agent?.config.systemPrompt ?? CONFIG.defaultAgents[0].systemPrompt;
+
+    const messages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      {
+        role: "user",
+        content: [
+          `Task: ${task.title}`,
+          `Description: ${task.description}`,
+          "",
+          "Create a video production plan:",
+          "1. Storyboard with shot descriptions",
+          "2. AI video generation prompt per shot",
+          "3. Camera movements and transitions",
+          "4. Estimated duration per shot",
+          "5. Post-production notes",
+        ].join("\n"),
       },
-      status: "ready_for_video_api_integration",
-    };
+    ];
+
+    try {
+      const response = await this.llm.chat({
+        model: scriptRoute.selected.model,
+        messages,
+        temperature: 0.7,
+        maxTokens: 4096,
+      });
+
+      const costRecord: CostRecord = {
+        taskId: task.id,
+        model: response.model,
+        provider: scriptRoute.selected.provider.name,
+        inputTokens: response.usage.inputTokens,
+        outputTokens: response.usage.outputTokens,
+        costUsd: scriptRoute.estimate.estimatedCostUsd,
+        timestamp: new Date(),
+      };
+      eventBus.dispatch({ type: "cost:recorded", record: costRecord });
+
+      return {
+        storyboard: response.content,
+        videoModel: videoRoute.selected.model,
+        videoCostEstimate: videoRoute.estimate,
+        scriptModel: response.model,
+        usage: response.usage,
+        latencyMs: response.latencyMs,
+        status: "completed",
+      };
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      this.log.warn(`LLM call failed, returning stub: ${errMsg}`);
+      return {
+        storyboard: null,
+        videoModel: videoRoute.selected.model,
+        videoCostEstimate: videoRoute.estimate,
+        status: "llm_unavailable",
+        error: errMsg,
+      };
+    }
   }
 }

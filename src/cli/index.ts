@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import "dotenv/config";
 import { Command } from "commander";
 import { Orchestrator } from "../core/orchestrator.js";
 import { NicheAdapter } from "../adapters/niche-adapter.js";
@@ -11,7 +12,7 @@ const program = new Command();
 program
   .name("aiunit71")
   .description("AiUnit71 — Multi-room AI Agent Factory for Creative Production")
-  .version("0.1.0");
+  .version("0.3.0");
 
 // ─── Status Command ──────────────────────────────────────────────
 program

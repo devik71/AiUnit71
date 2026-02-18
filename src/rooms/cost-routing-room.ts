@@ -83,18 +83,40 @@ export class CostRoutingRoom extends BaseRoom {
   }
 
   protected async processTask(task: Task): Promise<Record<string, unknown>> {
-    const caps = (task.input.capabilities as string[]) || ["text-generation"];
-    const inputTokens = (task.input.inputTokens as number) || 1000;
-    const outputTokens = (task.input.outputTokens as number) || 1000;
+    const requestedCapabilities = (task.input.capabilities as string[]) || [
+      "text-generation",
+    ];
 
-    const comparison = this.compareOptions(caps, inputTokens, outputTokens);
-    const formatted = this.formatComparison(caps, inputTokens, outputTokens);
+    const route = this.routeModel({
+      capabilities: requestedCapabilities as any,
+      inputTokens: (task.input.inputTokens as number) || 1000,
+      outputTokens: (task.input.outputTokens as number) || 1000,
+      minQuality: (task.input.minQuality as number) || 50,
+    });
+
+    // Format comparison as readable markdown
+    const alts = route.estimate.alternatives;
+    const lines = [
+      `# Cost Comparison: ${requestedCapabilities.join(", ")}`,
+      "",
+      "| # | Model | Provider | Cost | Quality |",
+      "|---|-------|----------|------|---------|",
+      `| ★ | ${route.selected.model} | ${route.selected.provider.name} | $${route.estimate.estimatedCostUsd.toFixed(6)} | ${route.selected.qualityScore}/100 |`,
+      ...alts.map((a, i) =>
+        `| ${i + 1} | ${a.model} | ${a.provider} | $${a.costUsd.toFixed(6)} | ${a.qualityScore}/100 |`
+      ),
+      "",
+      `**Selected**: ${route.selected.model}`,
+      `**Reasoning**: ${route.reasoning}`,
+    ];
 
     return {
-      comparison,
-      formatted,
-      cheapest: comparison[0] || null,
-      sessionTotal: this.costRouter.getTotalSpent(),
+      comparison: lines.join("\n"),
+      selected: route.selected.model,
+      estimatedCostUsd: route.estimate.estimatedCostUsd,
+      alternatives: alts,
+      reasoning: route.reasoning,
+      status: "completed",
     };
   }
 }

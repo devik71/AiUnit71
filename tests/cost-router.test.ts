@@ -122,4 +122,56 @@ describe("CostRouter", () => {
 
     expect(result.selected.capabilities).toContain("video-generation");
   });
+
+  // ── New: Cost Ledger Tests ──
+
+  it("records operations to the cost ledger", () => {
+    expect(router.getOperationCount()).toBe(0);
+
+    router.recordOperation({
+      taskId: "test-1",
+      model: "llama3.2-vision:11b",
+      provider: "Ollama (Local)",
+      inputTokens: 500,
+      outputTokens: 1000,
+      costUsd: 0,
+      timestamp: new Date(),
+    });
+
+    router.recordOperation({
+      taskId: "test-2",
+      model: "anthropic/claude-sonnet-4",
+      provider: "OpenRouter",
+      inputTokens: 2000,
+      outputTokens: 3000,
+      costUsd: 0.051,
+      timestamp: new Date(),
+    });
+
+    expect(router.getOperationCount()).toBe(2);
+    expect(router.getTotalSpent()).toBeCloseTo(0.051);
+
+    const ledger = router.getLedger();
+    expect(ledger.length).toBe(2);
+    expect(ledger[0].model).toBe("llama3.2-vision:11b");
+    expect(ledger[1].costUsd).toBeCloseTo(0.051);
+  });
+
+  it("produces an enhanced cost summary with ledger data", () => {
+    router.recordOperation({
+      taskId: "op-1",
+      model: "anthropic/claude-sonnet-4",
+      provider: "OpenRouter",
+      inputTokens: 1000,
+      outputTokens: 2000,
+      costUsd: 0.033,
+      timestamp: new Date(),
+    });
+
+    const summary = router.getCostSummary();
+    expect(summary).toContain("Total session cost:");
+    expect(summary).toContain("Operations: 1");
+    expect(summary).toContain("Top operations:");
+    expect(summary).toContain("claude-sonnet-4");
+  });
 });

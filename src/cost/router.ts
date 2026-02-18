@@ -1,4 +1,4 @@
-import type { ModelOption, ModelCapability, CostEstimate } from "../core/types.js";
+import type { ModelOption, ModelCapability, CostEstimate, CostRecord } from "../core/types.js";
 import { MODEL_OPTIONS } from "./pricing-table.js";
 import { logger } from "../core/logger.js";
 
@@ -41,6 +41,7 @@ export interface RouteResult {
 export class CostRouter {
   private models: ModelOption[];
   private totalSpentUsd = 0;
+  private costLedger: CostRecord[] = [];
 
   constructor(customModels?: ModelOption[]) {
     this.models = customModels || MODEL_OPTIONS;
@@ -210,13 +211,49 @@ export class CostRouter {
     this.totalSpentUsd += costUsd;
   }
 
+  /** Record a full cost operation with metadata */
+  recordOperation(record: CostRecord): void {
+    this.costLedger.push(record);
+    this.totalSpentUsd += record.costUsd;
+  }
+
+  /** Get the full cost ledger */
+  getLedger(): CostRecord[] {
+    return [...this.costLedger];
+  }
+
   /** Get total session cost */
   getTotalSpent(): number {
     return this.totalSpentUsd;
   }
 
+  /** Get number of recorded operations */
+  getOperationCount(): number {
+    return this.costLedger.length;
+  }
+
   /** Get a human-readable cost summary */
   getCostSummary(): string {
-    return `Total session cost: $${this.totalSpentUsd.toFixed(6)}`;
+    const lines = [`Total session cost: $${this.totalSpentUsd.toFixed(6)}`];
+
+    if (this.costLedger.length > 0) {
+      lines.push(`Operations: ${this.costLedger.length}`);
+
+      // Show top 5 operations by cost
+      const topOps = [...this.costLedger]
+        .sort((a, b) => b.costUsd - a.costUsd)
+        .slice(0, 5);
+
+      if (topOps.length > 0) {
+        lines.push("Top operations:");
+        for (const op of topOps) {
+          lines.push(
+            `  $${op.costUsd.toFixed(6)} — ${op.model} (${op.inputTokens}in/${op.outputTokens}out)`
+          );
+        }
+      }
+    }
+
+    return lines.join("\n");
   }
 }
