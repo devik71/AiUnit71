@@ -141,6 +141,11 @@ export class Orchestrator {
     // Plan the task
     const plan = this.planner.plan(input);
 
+    // Link subtasks to parent
+    for (const subtask of plan.subtasks) {
+      subtask.parentId = task.id;
+    }
+
     logger.info(`Plan:\n${plan.reasoning}`);
 
     // Execute parallel groups

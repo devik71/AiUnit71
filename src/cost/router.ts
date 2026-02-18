@@ -119,6 +119,11 @@ export class CostRouter {
           this.calculateCost(m, request.inputTokens, request.outputTokens) <=
           request.maxCostUsd!
       );
+      if (candidates.length === 0) {
+        throw new Error(
+          `No model meets cost budget $${request.maxCostUsd} for capabilities: ${request.capabilities.join(", ")}`
+        );
+      }
     }
 
     // Step 5: Sort by cost, then prefer local
