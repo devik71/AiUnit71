@@ -1,382 +1,272 @@
 # AiUnit71
 
-## Огляд
+**Віртуальна AI-Студія Генерації Контенту** — операційна система для креативного виробництва, де AI-агенти працюють як справжня студія.
 
-**AiUnit71** — це модульна, production-ready **багатокімнатна фабрика AI-агентів**, спроєктована для low-to-mid tier ринків креативу та автоматизації (2026–2027).
-
-Система забезпечує **full-stack AI-продакшн** із **зниженням вартості у 3–10×** порівняно з традиційними агенціями, зберігаючи **90%+ якості результату**.
-
-Побудована на **OpenClaw** як базовому execution-фреймворку, AiUnit71 працює через динамічну архітектуру **Rooms Warehouse** — живу AI-студію з підтримкою паралельних процесів, cost-aware routing та регульованої автономності.
+> Architecture Specification v1.0 · Implementation v0.3.0 · 156 tests passing
 
 ---
 
-## Стратегічна Місія
+## Концепція
 
-AiUnit71 створена для:
+AiUnit71 — це не просто набір AI-викликів. Це **повноцінна студійна інфраструктура**, де:
 
-- Раннього захоплення ніш автоматизації
-- Компресії агенційного продакшну в AI-пайплайни
-- Масштабованого креативного та технічного виробництва
+- Людина виступає CEO і контролює кожен етап
+- Агенти мають ролі, personality та спеціалізацію
+- Кожна місія проходить через структурований pipeline
+- Система навчається і дешевшає з кожним проєктом
 
-Основні напрямки:
-
-- Генерація контенту
-- UI/UX прототипування
-- Відеопродакшн
-- 3D-рендеринг
-- SMM та реклама
-- Музика та аудіо
-- Бренд-активи
-- Візуалізація продуктів
+**Мета:** делегувати реальні креативні проєкти AI-команді з better-than-human результатами.
 
 ---
 
-## Ключова Цінність
+## Архітектура
 
-AiUnit71 надає:
-
-- ✅ Рівень агенції
-- ✅ Радикальне зниження витрат
-- ✅ Адаптацію під нішу клієнта
-- ✅ Безперервний креативний потік
-- ✅ Контроль людиною
-
----
-
-## Основні Можливості
-
-### Модульна Адаптація
-
-Система автоматично адаптується до ніші клієнта.
-
-**Приклади входу**
-
-- Бренд косметики
-- Fintech-стартап
-- Crypto-продукт
-- E-commerce каталог
-
-**Приклади виходу**
-
-- AI Video Pack
-- SMM Content Calendar
-- UI Prototype Concepts
-- Brand Asset Sets
+```
+HUMAN LAYER        →  Slack / Dashboard / Portfolio
+TRANSLATION LAYER  →  Human feedback ↔ JSON mutations
+MISSION CONTEXT    →  Єдине джерело правди (бренд, технічні вимоги, бюджет)
+HOOK SYSTEM        →  Pre/post валідація на кожному кроці
+ORCHESTRATOR       →  DAG задач, паралельне виконання, lifecycle
+AGENT POOL         →  Micro / Standard (Ollama) / Power (API)
+TOOL REGISTRY      →  fal.ai, ComfyUI, Luma, Midjourney + fallback chains
+MEMORY + ECONOMICS →  Prompt Memory, Client Taste Profiles, ROI
+```
 
 ---
 
-### Архітектура Rooms Warehouse
+## Модулі
 
-AiUnit71 використовує динамічно створювані робочі простори (“Rooms”), оптимізовані під конкретні задачі.
+### `src/core/` — Ядро
 
-Rooms:
+| Файл | Опис |
+|------|------|
+| `orchestrator.ts` | Головний оркестратор з 18 кімнатами, DAG задач |
+| `types.ts` | Типи: Task, Agent, Room, Cost, Events |
+| `event-bus.ts` | Шина подій між агентами |
+| `logger.ts` | Структурований логер |
 
-- Контекстно ізольовані
-- Спеціалізовані
-- Паралельно виконувані
-- Масштабовані
+### `src/pipeline/` — Пайплайн виконання
 
----
+7-фазний production pipeline:
 
-### Smart Cost-Aware Routing
+| Фаза | Кімната | Опис |
+|------|---------|------|
+| 0 | NicheAdapter | Визначення ніші клієнта |
+| 1 | Briefing | Структурований бриф |
+| 2 | Brainstorm | Генерація концепцій |
+| 2.5 | Cost-Routing | Оцінка вартості |
+| 3 | JobMaster | Розподіл задач по кімнатах |
+| 4 | Execution | Паралельне виконання + Evaluation |
+| 5 | ReportMaster | QC звіт |
+| 6 | Finalizer | Delivery package + Case Study |
 
-Пріоритет виконання:
+### `src/creative/` — Креативний модуль _(новий)_
 
-1. **Локальні моделі (Ollama)** → Пріоритет
-2. **OpenRouter / Cloud APIs** → Резерв
-3. **Преміальні генеративні сервіси** → За потреби
+Реалізує секції 7–20 Architecture Specification:
 
-Цілі:
+| Файл | Специфікація | Опис |
+|------|-------------|------|
+| `mission-context.ts` | §7 | MissionContext Object — бренд, технічні вимоги, style constraints, бюджет |
+| `hook-system.ts` | §8 | 5 хуків: context_enrichment, prompt_validation, visual_render_check, artifact_validation, budget_check |
+| `tool-registry.ts` | §11 | 11 інструментів (fal.ai, ComfyUI, Midjourney, Luma, Topaz) + fallback chains для 8 типів задач |
+| `anti-slop-engine.ts` | §16 | Prevention / Detection / Correction AI-артефактів. Score < 0.6 → QC fail |
+| `dry-run.ts` | §20 | SIMULATION REPORT без реальних API-викликів |
+| `prompt-memory.ts` | §14 | Бібліотека успішних промптів з пошуком за relevance та ROI-аналітикою |
 
-- Мінімізація витрат
-- Оптимізація затримок
-- Баланс якості
+### `src/agents/` — Агенти
 
----
+| Агент | Tier | Роль |
+|-------|------|------|
+| `promptmaster.ts` | Power | Генерація semantic JSON промптів (ephemeral, per-task) |
+| `prompt-critic.ts` | Standard | Валідація промптів, confidence < 0.8 → рефайн |
+| `visual-prompter.ts` | Standard | Semantic JSON → diffusion / reasoning / midjourney формат |
+| `skillmaster.ts` | Standard | Підбір skill packs для агентів |
 
-### Cost Awareness Engine
+### `src/rooms/` — 18 кімнат
 
-AiUnit71:
+Briefing · Brainstorm · Copywriting · Image-Gen · JobMaster · UX-UI · Animation · Video · 3D · Music-Audio · Code-Deploy · Cost-Routing · Evaluation · Finalizer · HITL · Learning · Recruiter · ReportMaster
 
-- Логує використання токенів
-- Розраховує витрати API
-- Відстежує кредити
-- Формує деталізовані звіти витрат
+### `src/cost/` — Економіка
 
----
+- `router.ts` — Smart routing: Ollama (безплатно) → OpenRouter → Premium API
+- `pricing-table.ts` — Таблиця цін по моделях
 
-### Безперервність Креативу
+### `src/memory/` — Пам'ять
 
-Паралельні агенти підтримують потік між:
-
-- Візуалом
-- Текстом
-- Аудіо
-- Мошен-дизайном
-
-Уникаючи:
-
-- Втрати контексту
-- Drift стилю
-- Розриву пайплайнів
-
----
-
-### Human-in-the-Loop Контроль
-
-Чотири рівні автономності:
-
-| Рівень | Опис |
-|--------|------|
-| **0** | Повністю ручний режим |
-| **1** | Асистований режим |
-| **2** | Напівавтономний режим |
-| **3** | Автономний freeride |
-
-Оператор може:
-
-- Входити в Rooms
-- Перевизначати рішення
-- Коригувати routing
-- Додавати обмеження
+- `memory-store.ts` — In-memory store для agent experience, рішень, помилок
 
 ---
 
-### Активності Агентів
+## Creative Pipeline
 
-Агенти можуть:
+```
+Brief  →  PromptMaster  →  PromptCritic  →  VisualPrompter
+                               ↓ confidence < 0.8: рефайн
+                          ────────────────────────────────
+                          Anti-Slop inject → Draft ($0.04)
+                          Human checkpoint
+                          Final generation ($0.15 × 3 variants)
+                          Human selection
+                          Late expensive ops (upscale, video)
+                          Artifact validation hook
+                          Prompt Memory ← зберігаємо успішний
+```
 
-- Генерувати ідеї
-- Дебатувати рішення
-- Симулювати командну взаємодію
-- Підтримувати внутрішню CRM-логіку
-- Імітувати Discord / Slack workflow
+### Dual-Model Prompting
 
----
+PromptMaster генерує model-agnostic **Semantic JSON** → VisualPrompter конвертує під цільову модель:
 
-## Rooms Warehouse
-
-Базові Rooms (розширювані):
-
-- **Brainstorm Room** → Ідеї, концепти, moodboards
-- **Copywriting & Text Room** → Скрипти, пости, тексти
-- **Image Gen & Editing Room** → Візуал, редагування
-- **UX/UI Design Room** → Інтерфейси, перевірки
-- **Animation & Motion Room** → Motion / Lottie
-- **Video Production Room** → Відеопайплайни
-- **3D & Render Room** → Моделі, рендер
-- **Music & Audio Room** → Треки, озвучка
-- **Code & Deployment Room** → Розробка та релізи
-- **Cost & Routing Room** → Оптимізація та витрати
-- **Human-in-the-Loop Room** → Моніторинг
-- **Client Niche Adapter Room** → Генерація сервісів
+```
+Semantic JSON → [diffusion]   Flux/SDXL: keyword-weighted, ≤75 tokens
+              → [reasoning]  Nano Banana: natural language JSON
+              → [midjourney] natural language + --ar --s --v flags
+```
 
 ---
 
-## Технологічний Стек
+## Dry Run Mode
 
-### Базовий Фреймворк
+```bash
+# Симуляція без реальних API-викликів
+const report = new DryRunSimulator().simulate("FitPulse Landing", missionCtx);
+console.log(report.formatted());
+```
 
-- OpenClaw (latest)
-- skills.sh ecosystem
-
----
-
-### Локальні Моделі (Ollama)
-
-Offline-first виконання:
-
-- Llama3.2-vision:11b
-- Qwen2.5-VL:7b
-- DeepSeek-Coder-V2:16b
-- GLM-4.7-Flash
-- Інші моделі за потреби
-
----
-
-### Cloud & Generative Services
-
-Основний маршрутизатор:
-
-- OpenRouter
-
-Підтримувані сервіси:
-
-- Claude / GPT / Gemini
-- Veo / Kling / Sora / Luma
-- Midjourney / Firefly
-- Higgsfield / Nanobanana 3 PRO
-- Adobe Student Pro
-- Topaz Labs
+```
+SIMULATION REPORT
+──────────────────────────────────────────────────
+Project: FitPulse Landing
+Agents to spawn: 9
+  └─ CEO, TeamLead, HR, Brainstormer, PromptMaster, PromptCritic, VisualPrompter, Graphic Designer, QC Agent
+Estimated generations: 12 images
+Estimated cost: $4.80
+Estimated time: 45 min (with parallel execution)
+Budget utilization: 72% of allocated $6.50
+Critical path: Briefing → Brainstorm → Draft: Hero Image → Final: Hero Image → Quality Control
+Recommendations:
+  • Defer video generation ($1.00) to off-peak — only after image approval
+  • 8 tasks can run in parallel — enables significant time savings
+```
 
 ---
 
-### Інфраструктура
+## Tool Registry
 
-- Vercel → Деплой
-- Make.com / Zapier → Оркестрація
+| Інструмент | Тип | Вартість | Сильні сторони |
+|-----------|-----|----------|----------------|
+| fal.ai/nano-banana-pro | API | $0.15/img | Text in image, complex scenes |
+| fal.ai/nano-banana-2 | API | $0.039/img | Швидкий, дешевий |
+| ComfyUI/flux-dev | Local | $0 | LoRA, ControlNet, повний контроль |
+| ComfyUI/flux-dev-lora | Local | $0 | Custom style |
+| Midjourney | API | $0.04/img | Artistic quality |
+| Luma Dream Machine | API | $0.50/video | Text-to-video |
+| Runway Gen-4 | API | $0.75/video | Cinematic |
+| Topaz Gigapixel | Local | $0 | Upscale (фінальний крок) |
+
+**Fallback chains** для кожного типу задачі: photorealistic_image, artistic_illustration, product_visualization, video_generation, image_upscale, text_render...
 
 ---
 
-## Skills System
+## Ієрархія агентів
 
-Всі інструменти інкапсульовані як:
+### Постійні (кожна місія)
 
-- OpenClaw skills
-- Markdown skill modules
+CEO · TeamLead · HR · Brainstormer · PromptMaster · VisualPrompter · PromptCritic · QC Agent · SkillMaster
 
-Політика безпеки:
+### За викликом
 
-- Обов’язкове сканування через VirusTotal
-- Permission-based execution
-- Локальний пріоритет
+Copywriter · Graphic Designer · Photographer · Videographer · Frontend Developer · Backend Architect · Coder · Tester · SMM Master · Ads Creator · WebScout · Researcher · Devil's Advocate · Case Study Agent · Translation Agent · Anti-Slop Engine
+
+---
+
+## Технологічний стек
+
+```
+Runtime:        Node.js 20+ / TypeScript 5
+Orchestration:  Custom LangGraph-inspired DAG
+LLM routing:    Ollama (local) → OpenRouter (cloud)
+Local models:   Llama3.2, DeepSeek-Coder-V2, Qwen2.5-VL
+Cloud LLMs:     Claude, GPT-4o, Gemini
+Image APIs:     fal.ai (Nano Banana), ComfyUI, Midjourney
+Video APIs:     Luma Dream Machine, Runway Gen-4
+Upscale:        Topaz Gigapixel
+Testing:        Vitest
+```
 
 ---
 
 ## Встановлення
 
-### 1. Клонування Репозиторію
+```bash
+git clone https://github.com/devik71/AiUnit71.git
+cd AiUnit71
+npm install
+```
+
+### .env
+
+```env
+OPENROUTER_API_KEY=
+NANOBANANA_API_KEY=
+LUMALABS_API_KEY=
+MIDJOURNEY_API_KEY=
+RUNWAY_API_KEY=
+KREA_API_KEY=
+FREEPIC_API_KEY=
+TOPAZ_API_KEY=
+COMFYUI_API_KEY=
+```
+
+### Запуск тестів
 
 ```bash
-git clone https://github.com/your-repo/aiunit71.git
+npm test
+# Test Files: 13 passed | Tests: 156 passed
+```
 
+---
 
-⸻
+## Roadmap
 
-2. Встановлення Залежностей
+### ✅ Зроблено (v0.3.0)
 
-npm install
-# або
-pip install -r requirements.txt
+- [x] Orchestrator з 18 кімнатами
+- [x] 7-фазний PipelineExecutor
+- [x] Smart cost routing (Ollama → OpenRouter)
+- [x] Human-in-the-Loop (4 рівні автономності)
+- [x] PromptMasterAgent (ephemeral, per-task)
+- [x] SkillMaster + NicheAdapter
+- [x] **MissionContext Object** (§7)
+- [x] **Hook System** — 5 хуків (§8)
+- [x] **VisualPrompter Agent** — Semantic JSON → model-native (§10)
+- [x] **PromptCritic Agent** — валідація, confidence gating (§9)
+- [x] **Tool Registry** + fallback chains (§11)
+- [x] **Anti-Slop Engine** (§16)
+- [x] **Dry Run Mode** (§20)
+- [x] **Prompt Memory** з ROI-аналітикою (§14)
+- [x] 156 тестів
 
+### 🔜 Наступні кроки
 
-⸻
+- [ ] Slack інтеграція через n8n (§4, Week 4)
+- [ ] Observability Dashboard (§23)
+- [ ] Client Taste Profile (автобудування з feedback) (§14)
+- [ ] Creative Version Control (§15)
+- [ ] Automatic Case Study Generator (§19)
+- [ ] Inter-Mission Knowledge Graph (§14)
+- [ ] Creative Entropy Controller (§18)
+- [ ] Plugin Architecture (§22)
 
-3. Налаштування Локальних Моделей
+---
 
-Встановіть та запустіть Ollama-моделі.
+## Принципи
 
-⸻
+- **Human-in-the-loop** — CEO бере участь на кожному етапі
+- **Late expensive operations** — дорогі операції тільки після повного approve
+- **Progressive quality** — draft → refine → final
+- **Memory compounds** — кожна місія робить систему розумнішою
+- **Graceful degradation** — fallback chains, partial delivery, self-healing
 
-4. Налаштування API Ключів
+---
 
-Створіть .env:
-
-OPENROUTER_API_KEY=
-GEMINI_API_KEY=
-...
-
-
-⸻
-
-5. Ініціалізація Фреймворку
-
-npx openclaw init
-
-
-⸻
-
-6. Запуск Оркестратора
-
-python orchestrator.py
-# або
-node orchestrator.js
-
-
-⸻
-
-Використання
-
-Приклад Задачі
-
-aiunit71 run \
-  --task "Створити SMM кампанію для бренду косметики" \
-  --autonomy 2
-
-Логіка Роботи
- 1. Декомпозиція задачі
- 2. Розподіл по Rooms
- 3. Cost-aware routing
- 4. Паралельне виконання
- 5. Збір результатів
-
-Можливі Результати
- • Візуальні активи
- • Скрипти та тексти
- • UI прототипи
- • Відео / Motion
- • Deployable builds
-
-⸻
-
-План Розвитку
-
-Ключові етапи:
- 1. Архітектура системи
- 2. Orchestrator Engine
- 3. Cost & Routing Module
- 4. Реалізація Rooms
- 5. Розширення Skills
- 6. Локальна оптимізація
-
-⸻
-
-Принципи Безпеки
-
-AiUnit71 дотримується:
- • Local-first execution
- • Чіткої permission-моделі
- • Перевірки skills
- • Прозорості витрат
- • Мінімізації ризиків витоку даних
-
-⸻
-
-Внесок у Розробку
-
-Вітаються:
- • Нові Rooms
- • Skills-модулі
- • Routing-оптимізації
- • Cost-системи
- • Інтеграції пайплайнів
-
-Процес:
- 1. Fork репозиторію
- 2. Pull Request
- 3. Документація логіки
-
-⸻
-
-Ліцензія
-
-MIT License
-Див. файл LICENSE.
-
-
-
-.env dummy:
-
-# Формат: НАЗВА_СЕРВІСУ_API_KEY=ваш_ключ
-
-OPENROUTER_API_KEY=ваш_ключ_тут
-GROK_API_KEY=ваш_ключ_тут
-OPENAI_API_KEY=ваш_ключ_тут
-CLAUDE_API_KEY=ваш_ключ_тут
-NOTION_API_KEY=ваш_ключ_тут
-N8N_API_KEY=ваш_ключ_тут
-KREA_API_KEY=ваш_ключ_тут
-GEMINI_API_KEY=ваш_ключ_тут
-WIX_API_KEY=ваш_ключ_тут
-FREEPIC_API_KEY=ваш_ключ_тут
-TOPAZ_API_KEY=ваш_ключ_тут
-NANOBANANA_API_KEY=ваш_ключ_тут
-LUMALABS_API_KEY=ваш_ключ_тут
-MIDJOURNEY_API_KEY=ваш_ключ_тут
-HIGGSFIELD_API_KEY=ваш_ключ_тут
-COMFYUI_API_KEY=ваш_ключ_тут
-WEAVY_API_KEY=ваш_ключ_тут
-
-
-
-
+*v0.3.0 · Architecture Specification v1.0 · Author: Viktor + Claude · 2026*
