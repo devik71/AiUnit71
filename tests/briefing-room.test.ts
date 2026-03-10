@@ -6,6 +6,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { BriefingRoom } from "../src/rooms/briefing-room.js";
 import { MemoryStore } from "../src/memory/memory-store.js";
 import { CostRouter } from "../src/cost/router.js";
+import type { McpHost } from "../src/mcp/host.js";
+
+const mockMcpHost = {
+    connect: async () => {},
+    callTool: async () => "",
+    getAvailableTools: async () => [],
+} as unknown as McpHost;
 import { TaskStatus, TaskPriority } from "../src/core/types.js";
 import type { Task } from "../src/core/types.js";
 
@@ -109,7 +116,7 @@ describe("BriefingRoom", () => {
     beforeEach(() => {
         fetchSpy = vi.fn();
         vi.stubGlobal("fetch", fetchSpy);
-        room = new BriefingRoom(new MemoryStore(), new CostRouter());
+        room = new BriefingRoom(new MemoryStore(), mockMcpHost, new CostRouter());
     });
 
     afterEach(() => {

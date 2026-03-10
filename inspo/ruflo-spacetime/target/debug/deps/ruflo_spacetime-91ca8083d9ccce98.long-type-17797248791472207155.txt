@@ -1,0 +1,2 @@
+for<'a> fn(&'a ReducerContext, std::string::String, u64, std::string::String) -> Result<(), std::string::String> {start_phase}
+for<'a> fn(&'a ReducerContext, std::string::String, u64, std::string::String) -> Result<(), std::string::String> {start_phase}: Reducer<'_, _, _>

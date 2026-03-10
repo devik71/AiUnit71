@@ -2,6 +2,7 @@ import type { RoomConfig, Task } from "../core/types.js";
 import { AutonomyLevel } from "../core/types.js";
 import { BaseRoom } from "./base-room.js";
 import type { MemoryStore } from "../memory/memory-store.js";
+import type { McpHost } from "../mcp/host.js";
 import type { CostRouter } from "../cost/router.js";
 
 const CONFIG: RoomConfig = {
@@ -28,8 +29,8 @@ const CONFIG: RoomConfig = {
 };
 
 export class HitlRoom extends BaseRoom {
-    constructor(memory: MemoryStore, costRouter: CostRouter) {
-        super(CONFIG, memory, costRouter);
+    constructor(memory: MemoryStore, mcpHost: McpHost, costRouter: CostRouter) {
+        super(CONFIG, memory, mcpHost, costRouter);
     }
 
     protected async processTask(task: Task): Promise<Record<string, unknown>> {

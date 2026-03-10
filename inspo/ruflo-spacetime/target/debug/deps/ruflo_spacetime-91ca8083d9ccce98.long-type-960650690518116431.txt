@@ -1,0 +1,3 @@
+spacetimedb::spacetimedb_lib::Hash
+(&ReducerContext, std::string::String, u64, std::string::String)
+(&ReducerContext, std::string::String, std::string::String)

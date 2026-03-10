@@ -14,6 +14,8 @@ import { CostRouter } from "../cost/router.js";
 import { Planner } from "../planner/planner.js";
 import { HitlManager } from "../hitl/hitl-manager.js";
 import { BaseRoom } from "../rooms/base-room.js";
+import { createMemoryMcpServer } from "../mcp/server.js";
+import { McpHost } from "../mcp/host.js";
 import {
   BriefingRoom,
   BrainstormRoom,
@@ -56,6 +58,7 @@ export class Orchestrator {
   private rooms: Map<string, BaseRoom> = new Map();
   private tasks: Map<string, Task> = new Map();
   private memory: MemoryStore;
+  private mcpHost: McpHost;
   private costRouter: CostRouter;
   private planner!: Planner;
   private hitl: HitlManager;
@@ -69,12 +72,22 @@ export class Orchestrator {
     };
 
     this.memory = new MemoryStore();
+
+    // Initialize MCP Server and Host linked to this memory store
+    const mcpServer = createMemoryMcpServer(this.memory);
+    this.mcpHost = new McpHost(mcpServer);
+
     this.costRouter = new CostRouter();
     this.hitl = new HitlManager(this.config.autonomyLevel, this.config.costThreshold);
 
     this.initializeRooms();
     this.planner = new Planner(this.rooms);
     this.setupEventListeners();
+
+    // Connect MCP host in background
+    this.mcpHost.connect().catch(err => {
+      logger.error(`Orchestrator failed to connect MCP host: ${err}`);
+    });
 
     logger.info("AiUnit71 Orchestrator initialized", {
       roomCount: this.rooms.size,
@@ -86,24 +99,24 @@ export class Orchestrator {
 
   private initializeRooms(): void {
     const roomInstances: BaseRoom[] = [
-      new BriefingRoom(this.memory, this.costRouter),
-      new BrainstormRoom(this.memory, this.costRouter),
-      new CopywritingRoom(this.memory, this.costRouter),
-      new ImageGenRoom(this.memory, this.costRouter),
-      new JobMasterRoom(this.memory, this.costRouter),
-      new UxUiRoom(this.memory, this.costRouter),
-      new AnimationRoom(this.memory, this.costRouter),
-      new VideoRoom(this.memory, this.costRouter),
-      new ThreeDRoom(this.memory, this.costRouter),
-      new MusicAudioRoom(this.memory, this.costRouter),
-      new CodeDeployRoom(this.memory, this.costRouter),
-      new CostRoutingRoom(this.memory, this.costRouter),
-      new EvaluationRoom(this.memory, this.costRouter),
-      new FinalizerRoom(this.memory, this.costRouter),
-      new HitlRoom(this.memory, this.costRouter),
-      new LearningRoom(this.memory, this.costRouter),
-      new RecruiterRoom(this.memory, this.costRouter),
-      new ReportMasterRoom(this.memory, this.costRouter),
+      new BriefingRoom(this.memory, this.mcpHost, this.costRouter),
+      new BrainstormRoom(this.memory, this.mcpHost, this.costRouter),
+      new CopywritingRoom(this.memory, this.mcpHost, this.costRouter),
+      new ImageGenRoom(this.memory, this.mcpHost, this.costRouter),
+      new JobMasterRoom(this.memory, this.mcpHost, this.costRouter),
+      new UxUiRoom(this.memory, this.mcpHost, this.costRouter),
+      new AnimationRoom(this.memory, this.mcpHost, this.costRouter),
+      new VideoRoom(this.memory, this.mcpHost, this.costRouter),
+      new ThreeDRoom(this.memory, this.mcpHost, this.costRouter),
+      new MusicAudioRoom(this.memory, this.mcpHost, this.costRouter),
+      new CodeDeployRoom(this.memory, this.mcpHost, this.costRouter),
+      new CostRoutingRoom(this.memory, this.mcpHost, this.costRouter),
+      new EvaluationRoom(this.memory, this.mcpHost, this.costRouter),
+      new FinalizerRoom(this.memory, this.mcpHost, this.costRouter),
+      new HitlRoom(this.memory, this.mcpHost, this.costRouter),
+      new LearningRoom(this.memory, this.mcpHost, this.costRouter),
+      new RecruiterRoom(this.memory, this.mcpHost, this.costRouter),
+      new ReportMasterRoom(this.memory, this.mcpHost, this.costRouter),
     ];
 
     for (const room of roomInstances) {

@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escobar Coffee — Стратегія автоматизації</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --espresso: #033036;
+      --dark: #022024;
+      --copper: #FF5004;
+      --copper-light: rgba(255, 80, 4, 0.15);
+      --cream: #F8F9FA;
+      --cream-dark: #E9ECEF;
+      --text: #033036;
+      --muted: #495057;
+      --line: 1px solid rgba(3, 48, 54, 0.1);
+      --line-strong: 1px solid rgba(3, 48, 54, 0.18);
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+
+    /* ─── HEADER ──────────────────────────────────────── */
+    header {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 20px 0;
+    }
+
+    header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-brand {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    .nav-meta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(245, 240, 232, 0.45);
+      letter-spacing: 0.08em;
+    }
+
+    /* ─── HERO ────────────────────────────────────────── */
+    .hero {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 96px 0 80px;
+    }
+
+    .hero-eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 36px;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5.5vw, 62px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      max-width: 780px;
+      margin-bottom: 32px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--copper);
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: rgba(245, 240, 232, 0.65);
+      max-width: 540px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .hero-sub strong {
+      color: var(--cream);
+      font-weight: 400;
+    }
+
+    .hero-divider {
+      border: none;
+      border-top: 1px solid rgba(245, 240, 232, 0.12);
+      margin: 56px 0;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+
+    .kpi {
+      padding: 0 32px 0 0;
+      border-right: 1px solid rgba(245, 240, 232, 0.12);
+    }
+
+    .kpi:first-child {
+      padding-left: 0;
+    }
+
+    .kpi:last-child {
+      border-right: none;
+    }
+
+    .kpi-num {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--copper);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: rgba(245, 240, 232, 0.5);
+      line-height: 1.4;
+      font-weight: 300;
+    }
+
+    /* ─── SECTIONS ────────────────────────────────────── */
+    section {
+      padding: 80px 0;
+      border-bottom: var(--line-strong);
+    }
+
+    section:last-of-type {
+      border-bottom: none;
+    }
+
+    .section-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+
+    .section-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      color: var(--copper);
+      text-transform: uppercase;
+    }
+
+    .section-title-sm {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .section-eyebrow::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line-strong);
+    }
+
+    /* ─── ANALYSIS ────────────────────────────────────── */
+    .analysis-banner {
+      background: var(--copper-light);
+      border: 1px solid rgba(200, 121, 65, 0.25);
+      padding: 32px 40px;
+      margin-bottom: 48px;
+    }
+
+    .analysis-banner p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--dark);
+    }
+
+    .analysis-banner strong {
+      color: var(--espresso);
+      font-weight: 600;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .insight-card {
+      background: white;
+      border: var(--line-strong);
+      padding: 32px;
+    }
+
+    .insight-card-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .insight-card h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .insight-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+    }
+
+    .insight-card p strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ─── PROBLEM ─────────────────────────────────────── */
+    .problem-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .problem-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 32px;
+      padding: 36px 0;
+      border-bottom: var(--line);
+      align-items: start;
+    }
+
+    .problem-item:last-child {
+      border-bottom: none;
+    }
+
+    .problem-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--copper);
+      letter-spacing: 0.1em;
+      padding-top: 3px;
+    }
+
+    .problem-content h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .problem-content p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+      max-width: 480px;
+    }
+
+    .problem-content p strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .problem-tag {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--copper);
+      background: var(--copper-light);
+      border: 1px solid rgba(200, 121, 65, 0.2);
+      padding: 4px 10px;
+      white-space: nowrap;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    /* ─── SOLUTION ────────────────────────────────────── */
+    .solution-intro {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 600px;
+      margin-bottom: 48px;
+    }
+
+    .solution-intro strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--cream-dark);
+      border: var(--line-strong);
+      margin-bottom: 2px;
+    }
+
+    .module {
+      background: var(--cream);
+      padding: 40px 36px;
+    }
+
+    .module-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .module-num-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      color: var(--copper);
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .module h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+
+    .module p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+      margin-bottom: 24px;
+    }
+
+    .module-replaces {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+
+    .module-replaces span {
+      text-decoration: line-through;
+      color: rgba(122, 101, 88, 0.5);
+    }
+
+    .module-replaces strong {
+      color: var(--copper);
+      font-weight: 500;
+    }
+
+    .module-result {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--espresso);
+      background: var(--copper-light);
+      border: 1px solid rgba(200, 121, 65, 0.3);
+      padding: 7px 14px;
+    }
+
+    .module-result::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--copper);
+      flex-shrink: 0;
+    }
+
+    /* ─── STACK COMPARISON ────────────────────────────── */
+    .compare-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--cream-dark);
+      border: var(--line-strong);
+    }
+
+    .compare-col {
+      background: var(--cream);
+      padding: 36px;
+    }
+
+    .compare-col-head {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: var(--line-strong);
+    }
+
+    .compare-col-head.current {
+      color: var(--muted);
+    }
+
+    .compare-col-head.aiunit {
+      color: var(--copper);
+    }
+
+    .compare-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: var(--line);
+      font-size: 13px;
+    }
+
+    .compare-item:last-child {
+      border-bottom: none;
+    }
+
+    .compare-item-name {
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .compare-item-cost {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+    }
+
+    .compare-col.current .compare-item-cost {
+      color: var(--muted);
+    }
+
+    .compare-col.aiunit .compare-item-cost {
+      color: var(--copper);
+      font-weight: 500;
+    }
+
+    .compare-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 2px solid var(--espresso);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .compare-total .total-val {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .compare-col.current .total-val {
+      color: var(--muted);
+    }
+
+    .compare-col.aiunit .total-val {
+      color: var(--copper);
+    }
+
+    /* ─── HOW IT WORKS ────────────────────────────────── */
+    .pipeline {
+      position: relative;
+      padding-left: 40px;
+      border-left: 2px solid var(--copper-light);
+    }
+
+    .step {
+      position: relative;
+      padding: 0 0 40px 40px;
+    }
+
+    .step:last-child {
+      padding-bottom: 0;
+    }
+
+    .step::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 6px;
+      width: 12px;
+      height: 12px;
+      background: var(--copper);
+      border: 2px solid var(--cream);
+      outline: 1px solid var(--copper);
+    }
+
+    .step-actor {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+      max-width: 520px;
+    }
+
+    .step p strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ─── ROADMAP ─────────────────────────────────────── */
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--cream-dark);
+      border: var(--line-strong);
+    }
+
+    .roadmap-phase {
+      background: var(--cream);
+      padding: 36px 28px;
+    }
+
+    .phase-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .phase-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .phase-timeline {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-weight: 300;
+    }
+
+    .phase-items {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .phase-item {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .phase-item::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--copper);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .phase-item span {
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .phase-item strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ─── PILOT ───────────────────────────────────────── */
+    .pilot-container {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 56px;
+      position: relative;
+    }
+
+    .pilot-container::before {
+      content: 'ПІЛОТНИЙ ПРОЄКТ';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--copper);
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      font-weight: 500;
+      color: var(--espresso);
+      padding: 8px;
+    }
+
+    .pilot-container {
+      padding-top: 80px;
+    }
+
+    .pilot-container h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      max-width: 600px;
+      line-height: 1.2;
+    }
+
+    .pilot-container p {
+      font-size: 14px;
+      color: rgba(245, 240, 232, 0.65);
+      line-height: 1.7;
+      font-weight: 300;
+      max-width: 560px;
+      margin-bottom: 14px;
+    }
+
+    .pilot-container p strong {
+      color: var(--cream);
+      font-weight: 500;
+    }
+
+    .pilot-deliverables {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .pilot-deliverable {
+      display: flex;
+      gap: 14px;
+      font-size: 13px;
+      align-items: flex-start;
+    }
+
+    .pilot-deliverable::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--copper);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .pilot-deliverable span {
+      color: rgba(245, 240, 232, 0.5);
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    .pilot-deliverable strong {
+      color: var(--cream);
+      font-weight: 500;
+    }
+
+    /* ─── CLOSING ─────────────────────────────────────── */
+    .closing-section {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 100px 0 80px;
+    }
+
+    .closing-statement {
+      font-size: clamp(26px, 4vw, 48px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      max-width: 680px;
+      margin-bottom: 56px;
+    }
+
+    .closing-statement em {
+      font-style: normal;
+      color: var(--copper);
+    }
+
+    .closing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-top: 1px solid rgba(245, 240, 232, 0.12);
+      padding-top: 40px;
+    }
+
+    .closing-block {
+      padding-right: 32px;
+    }
+
+    .closing-block .cl-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245, 240, 232, 0.35);
+      margin-bottom: 8px;
+    }
+
+    .closing-block .cl-value {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--cream);
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────── */
+    footer {
+      background: var(--dark);
+      padding: 20px 0;
+    }
+
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-brand {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(245, 240, 232, 0.3);
+    }
+
+    .footer-doc {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(245, 240, 232, 0.18);
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 20px;
+      }
+
+      .hero {
+        padding: 60px 0 56px;
+      }
+
+      .kpi-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+
+      .kpi {
+        border-right: none;
+        padding: 0;
+      }
+
+      .insight-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .problem-item {
+        grid-template-columns: 48px 1fr;
+        gap: 16px;
+      }
+
+      .problem-tag {
+        display: none;
+      }
+
+      .module-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .compare-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .roadmap-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pilot-deliverables {
+        grid-template-columns: 1fr;
+      }
+
+      .closing-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="container">
+      <div class="nav-brand" style="display: flex; align-items: center; gap: 12px;">
+        <svg height="24" viewBox="0 0 705.16 142.14" xmlns="http://www.w3.org/2000/svg" aria-label="Escobar Logo" style="display:block;fill:#f05423"><path d="M91,113.61c-.76,1.21-1.58,2.49-2.49,3.85-.9,1.36-1.89,2.64-2.94,3.85-3.32,4.23-7.43,8.04-12.34,11.43-4.91,3.4-10.68,5.09-17.32,5.09s-12.19-2.38-15.73-7.13c-3.55-4.75-5.32-12.79-5.32-24.11v-20.6h61.57c-.15-14.33-4.91-26.07-14.26-35.2-9.36-9.13-20.75-13.69-34.18-13.69-12.22,0-23.28,5.09-33.16,15.28C4.94,62.57,0,74.9,0,89.39s5.55,27.65,16.64,37.69c11.09,10.04,23.96,15.05,38.6,15.05,9.2,0,17.01-2.6,23.43-7.81,6.41-5.21,11.73-11.28,15.96-18.22l-3.62-2.49ZM34.86,66.98c0-1.36.04-2.9.11-4.64.07-1.74.19-3.51.34-5.32.6-3.92,1.92-7.47,3.96-10.64,2.04-3.17,5.47-4.75,10.3-4.75,5.88,0,9.81,2.3,11.77,6.9,1.96,4.61,3.09,9.7,3.4,15.28.15,1.21.23,2.42.23,3.62v14.26h-30.11v-14.71Z"/><path d="M165.69,80.79c-1.96-1.21-3.85-2.15-5.66-2.83-1.81-.68-3.4-1.17-4.75-1.47l-21.5-5.88c-.9-.3-1.89-.6-2.94-.91-1.06-.3-2.11-.68-3.17-1.13-2.72-1.21-5.25-2.94-7.58-5.21-2.34-2.26-3.51-5.43-3.51-9.51v-.68c.3-2.86,2.07-5.47,5.32-7.81,3.24-2.34,8.11-3.51,14.6-3.51,1.81,0,3.74.19,5.77.57,2.04.38,4.11,1.02,6.23,1.92,4.22,1.81,8.26,4.72,12.11,8.72,3.85,4,6.68,9.39,8.49,16.19h4.3v-30.56h-4.53c-.3,1.21-1.02,2.34-2.15,3.4-1.13,1.06-2.91,1.59-5.32,1.59-1.06,0-2.19-.23-3.39-.68-1.21-.45-2.94-1.13-5.21-2.04-.15-.15-.38-.26-.68-.34-.3-.07-.53-.11-.68-.11-2.11-.9-4.3-1.7-6.56-2.38-2.26-.68-4.98-1.02-8.15-1.02-2.12,0-4.41.15-6.9.45-2.49.3-5.09.83-7.81,1.59-5.58,1.51-10.68,4.38-15.28,8.6-4.6,4.23-6.9,10.57-6.9,19.02,0,7.4,1.28,13.28,3.85,17.66,2.57,4.38,5.43,7.62,8.6,9.74,1.51,1.06,3.02,1.92,4.53,2.6,1.51.68,2.86,1.17,4.07,1.47l20.6,5.89c.75.15,1.47.34,2.15.57.68.22,1.39.49,2.15.79,3.92,1.21,7.54,3.02,10.86,5.43,3.32,2.42,4.98,6.19,4.98,11.32,0,.61-.04,1.21-.11,1.81-.08.6-.19,1.21-.34,1.81-.76,2.72-2.68,5.21-5.77,7.47-3.09,2.26-8.04,3.4-14.83,3.4-9.96,0-18.22-3.58-24.79-10.75-6.56-7.16-10.53-15.2-11.88-24.11h-5.66v38.94l5.66-.23v-.68c.15-1.36.75-2.71,1.81-4.07,1.05-1.36,2.56-2.04,4.53-2.04h.79c.23,0,.41.08.57.23,1.21.15,2.45.6,3.73,1.36,1.28.76,2.83,1.59,4.64,2.49.3.15.64.3,1.02.45.38.15.79.3,1.25.45,2.56,1.05,5.13,1.89,7.7,2.49,2.56.6,5.51.9,8.83.9,1.66,0,3.32-.08,4.98-.22,1.66-.15,3.32-.38,4.98-.68,7.7-1.21,14.75-4.33,21.17-9.39,6.41-5.05,9.62-13.09,9.62-24.11,0-7.54-1.44-13.39-4.3-17.54-2.87-4.15-6.04-7.28-9.51-9.39Z"/><path d="M248.38,55.66c-.15.15-.3.34-.45.57-.15.23-.3.49-.45.79-.3.3-.64.64-1.02,1.02-.38.38-.72.79-1.02,1.25-.9,1.06-1.74,2.19-2.49,3.4-.76,1.21-1.13,2.64-1.13,4.3,0,4.68,1.25,8.72,3.74,12.11,2.49,3.39,6,5.09,10.53,5.09s8.34-1.55,11.43-4.64c3.09-3.09,4.64-7.36,4.64-12.79,0-8-3.59-14.9-10.75-20.71-7.17-5.81-15.05-8.86-23.65-9.17h-1.36c-1.36,0-2.75.08-4.19.23-1.44.15-2.91.3-4.41.45-11.32,1.97-21.7,7.6-31.13,16.9-9.43,9.3-14.15,21.66-14.15,37.09,0,12.86,4.94,24.5,14.83,34.94,9.88,10.43,22.82,15.65,38.82,15.65,2.56,0,5.81-.26,9.73-.79,3.92-.53,8-2.15,12.22-4.87,3.47-2.26,6.79-5.43,9.96-9.51,3.17-4.07,6.03-9.58,8.6-16.52l-4.08-1.59c-3.62,8.75-8.23,15.81-13.81,21.17-5.58,5.36-12.6,8.04-21.05,8.04-7.55,0-12.64-2.57-15.28-7.71-2.64-5.14-4.26-10.81-4.87-17.02,0-1.51-.04-3.02-.11-4.54-.08-1.51-.11-3.02-.11-4.54v-38.68c0-.99.07-2,.23-3.07.3-5.59,1.55-10.7,3.73-15.31,2.19-4.61,6.6-6.92,13.24-6.92,5.13,0,8.94,1.17,11.43,3.51,2.49,2.34,3.73,5.09,3.73,8.26,0,.61-.15,1.21-.45,1.81-.3.6-.6,1.21-.9,1.81Z"/><path d="M378.07,7.7h11.54v126.97h-11.09v4.53h42.78v-15.39c2.11,5.74,4.87,9.89,8.26,12.45,3.4,2.57,6.9,4.22,10.53,4.98,1.81.3,3.54.53,5.21.68,1.66.15,3.24.22,4.75.22,14.18,0,25.01-5.24,32.48-15.73,7.47-10.49,11.43-22.07,11.88-34.75v-2.04c0-15.4-4.91-27.99-14.71-37.8-9.81-9.81-20.6-14.71-32.37-14.71h-2.26c-5.28.45-10.26,2.23-14.94,5.32-4.68,3.09-7.62,6.98-8.83,11.66V0c-2.26.91-4.87,1.66-7.81,2.26-2.94.6-6.68.9-11.2.9h-24.22v4.53ZM421.76,87.01v-9.85c.15-10.26,1.47-17.69,3.96-22.3,2.49-4.6,5.32-7.66,8.49-9.17,1.36-.75,2.75-1.24,4.19-1.47,1.43-.23,2.68-.34,3.73-.34,4.38,0,8.38,2.19,12,6.56,3.62,4.38,5.43,12.75,5.43,25.13v24.67c0,9.66-1.06,18.19-3.17,25.58-2.11,7.39-6.79,11.09-14.04,11.09-6.34,0-10.9-2.75-13.69-8.26-2.79-5.51-4.64-11.51-5.55-17.99-.6-3.92-.98-7.66-1.13-11.21-.15-3.54-.23-6.6-.23-9.17v-3.28Z"/><path d="M553.5,37.1c-15.09,0-26.79,2.79-35.09,8.37-8.3,5.58-12.45,12-12.45,19.24,0,4.23,1.47,7.85,4.41,10.87,2.94,3.02,6.75,4.53,11.43,4.53,3.92,0,7.32-1.32,10.19-3.96,2.86-2.64,4.3-6,4.3-10.07,0-1.96-.34-3.7-1.02-5.21-.68-1.51-1.55-2.79-2.6-3.85-.15-.3-.34-.57-.57-.79-.23-.23-.49-.41-.79-.57-.15-.15-.27-.26-.34-.34-.08-.07-.19-.19-.34-.34-.76-.76-1.47-1.59-2.15-2.49-.68-.9-1.02-2.04-1.02-3.4,0-.3.07-.64.23-1.02.15-.37.3-.71.45-1.02.9-1.36,2.79-2.6,5.66-3.73,2.87-1.13,6.87-1.7,12-1.7,4.68,0,8.11.94,10.3,2.83,2.19,1.89,3.66,3.89,4.41,6,.45,1.36.75,2.6.91,3.73.15,1.13.23,2.15.23,3.06v26.26c-2.11.15-4.23.26-6.34.34-2.12.08-4.3.19-6.56.34-12.98.76-24.87,3.1-35.65,7.02-10.79,3.93-16.19,11.92-16.19,24,0,7.39,2.72,13.73,8.15,19.01,5.43,5.28,12.98,7.92,22.64,7.92h2.15c.68,0,1.32-.08,1.92-.22,5.43-.45,10.75-1.97,15.96-4.53,5.21-2.57,9.85-6.34,13.92-11.32,1.21,3.77,3.32,7.02,6.34,9.73,3.02,2.72,6.26,4.6,9.73,5.66.75.15,1.55.3,2.38.45.83.15,1.62.22,2.38.22,3.02,0,6.19-.38,9.51-1.13,3.32-.76,6.71-2.26,10.19-4.53,1.21-.9,2.49-2,3.85-3.28,1.36-1.28,2.72-2.68,4.07-4.19l-3.17-2.94c-.76,1.06-1.58,1.89-2.49,2.49-.9.6-1.81,1.06-2.72,1.36-1.06.3-2.11.49-3.17.57-1.06.08-1.96.11-2.72.11-1.06,0-1.74-.68-2.04-2.04-.3-1.36-.45-2.79-.45-4.3V57.47c0-1.05-.08-2.18-.23-3.39-.15-1.21-.53-2.41-1.13-3.62-1.36-3.32-4.75-6.37-10.19-9.17-5.43-2.79-14.87-4.19-28.3-4.19ZM561.65,121.76c-1.81,1.66-3.51,3.09-5.09,4.3-1.59,1.21-3.21,2.19-4.87,2.94-1.21.61-2.45,1.06-3.73,1.36-1.28.3-2.6.45-3.96.45-4.53,0-7.58-1.17-9.17-3.51-1.59-2.34-2.53-4.87-2.83-7.58-.15-1.05-.23-2.07-.23-3.06v-4.42c0-1.36.04-2.94.11-4.75.07-1.81.41-3.62,1.02-5.43,1.21-3.47,3.85-6.68,7.92-9.62,4.07-2.94,11.01-4.64,20.82-5.09v34.41Z"/><path d="M645.97,39.36c-2.94.6-6.68.9-11.2.9h-24.22v4.53h11.54v89.87h-11.09v4.53h53.88v-4.53h-11.09v-59.08c0-10.11,1.81-18.18,5.43-24.22,3.62-6.03,8.3-9.05,14.04-9.05h.9c1.05,0,2,.15,2.83.45.83.3,1.25.9,1.25,1.81,0,.3-.04.68-.11,1.13-.08.45-.19.83-.34,1.13-.15.45-.38.9-.68,1.36-.3.45-.53.91-.68,1.36-.3.3-.53.6-.68.9-.15.3-.3.6-.45.9-1.06,1.96-1.66,3.85-1.81,5.66-.15,1.81-.23,3.32-.23,4.53,0,4.38,1.21,7.66,3.62,9.84,2.41,2.19,4.98,3.59,7.7,4.19.6,0,1.17.04,1.7.11.53.08,1.09.11,1.7.11,4.83,0,8.9-1.59,12.22-4.75,3.32-3.17,4.98-7.54,4.98-13.13,0-.75-.11-2.07-.34-3.96-.23-1.88-.94-3.96-2.15-6.23-1.51-2.56-4-4.98-7.47-7.24-3.47-2.26-8.6-3.4-15.39-3.4-5.58,0-10.64,1.13-15.17,3.4-4.53,2.26-8.08,5.43-10.64,9.51h-.23v-12.9c-2.26.9-4.87,1.66-7.81,2.26Z"/><path d="M329.87,37.1c-12.84,0-24.57,4.91-35.21,14.72-10.63,9.81-16.03,22.49-16.18,38.03-.16,13.44,3.96,24.65,12.34,33.62,8.38,8.98,17.61,14.68,27.73,17.09,1.96.61,3.88,1.03,5.77,1.25,1.88.22,3.74.34,5.55.34,1.5,0,3.05-.08,4.63-.22,1.59-.16,3.14-.38,4.64-.68,10.56-2.12,20.27-7.73,29.09-16.86,8.83-9.13,13.25-20.64,13.25-34.53s-4.27-25.08-12.8-34.07c-8.52-8.97-17.91-14.74-28.17-17.31-1.82-.46-3.59-.8-5.33-1.03-1.74-.22-3.51-.34-5.31-.34ZM346.61,72.98c6.63,13.63,12.71,28.13,12.71,35.51,0,15.34-11.76,27.92-26.75,29.21-.38.04-.78.07-1.18.09-.13,0-.28.01-.41.01-.24.01-.47.03-.71.01-.13.01-.26.01-.39.01-.92,0-1.82-.04-2.64-.13-.08,0-.17-.01-.25-.03-14.8-1.5-26.35-13.99-26.35-29.19,0-7.38,6.08-21.98,12.71-35.66,7.87-16.24,16.51-31.2,16.64-31.2,0,0,8.71,15.03,16.64,31.34Z"/></svg>
+      </div>
+      <div class="nav-meta mono">СТРАТЕГІЯ АВТОМАТИЗАЦІЇ // 2025-2026</div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-eyebrow">— Внутрішній стратегічний документ</div>
+      <h1>Стратегія автоматизації<br><em>Продажі та маркетинг</em></h1>
+      <p class="hero-sub">
+        Escobar переходить від моделі «офіс + виробництво + команда на місці»
+        до моделі <strong>«розподілена команда + автоматизовані процеси + партнерська інфраструктура»</strong>.
+      </p>
+
+      <hr class="hero-divider">
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-num">Блок 1</div>
+          <div class="kpi-label">Продажі: AI + голосові боти, CRM, ліди</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num">Блок 2</div>
+          <div class="kpi-label">Маркетинг: AI-контент, обробка фото/відео, SEO</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num">Блок 3</div>
+          <div class="kpi-label">Операції: партнерська мережа, шоурум, бренд</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 ANALYSIS -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">01</span>
+        <span class="section-title-sm">Резюме документа</span>
+      </div>
+
+      <div class="analysis-banner">
+        <p>
+          Цей документ описує поетапну стратегію автоматизації двох ключових функцій Escobar Coffee: продажів (B2B) та
+          маркетингу.
+          <strong>Мета — побудувати систему, яка працює ефективніше за немотивованих або недосвідчених
+            співробітників</strong>,
+          при цьому не вимагає постійної фізичної присутності команди на виробництві.
+        </p>
+      </div>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-card-label">Автоматизація відділу продажів</div>
+          <h4>AI-чат-бот та Голосовий бот</h4>
+          <p>
+            Текстовий бот на сайті та в Instagram/Telegram, який відповідає на запити 24/7. Голосовий бот для
+            стандартизації.
+            <strong>Бот не замінює менеджера — він кваліфікує і готує ліда.</strong>
+          </p>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card-label">Автоматизована лідогенерація</div>
+          <h4>Збір баз потенційних B2B-клієнтів</h4>
+          <p>
+            Google Maps, Інстаграм парсинг, LinkedIn, OLX.
+            <strong>Передача менеджеру топ-50 найрелевантніших лідів на тиждень.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 MARKETING PROBLEM -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">02</span>
+        <span class="section-title-sm">Автоматизація відділу маркетингу</span>
+      </div>
+
+      <div class="problem-list">
+        <div class="problem-item">
+          <div class="problem-num mono">2.1</div>
+          <div class="problem-content">
+            <h3>Відеоконтент: бренд-амбасадори та AI-аватари</h3>
+            <p>
+              Оптимальна модель: Реальні амбасадори раз на місяць + UGC від партнерів щотижня.
+              <strong>Мінімальний інструктаж для партнерських кав'ярень.</strong>
+            </p>
+          </div>
+          <div class="problem-tag">АВТОРУЖНИЙ МАРКЕТИНГ</div>
+        </div>
+
+        <div class="problem-item">
+          <div class="problem-num mono">2.2</div>
+          <div class="problem-content">
+            <h3>Автоматична обробка фотоматеріалів</h3>
+            <p>
+              Побудова конвеєру: знімок → автоматичний відбір → уніфікований стиль → контент-сток.
+              <strong>Imagen AI або Narrative Select</strong> економить години ручної роботи.
+            </p>
+          </div>
+          <div class="problem-tag">ФОТО СТОК</div>
+        </div>
+
+        <div class="problem-item">
+          <div class="problem-num mono">2.4</div>
+          <div class="problem-content">
+            <h3>AI-генерація текстів для сайту та контенту</h3>
+            <p>
+              Описи товарів, SEO-статті, підписи до постів.
+              <strong>Всі 17+ сортів мають якісні SEO-описи за 1 день завдяки ChatGPT/Claude.</strong>
+            </p>
+          </div>
+          <div class="problem-tag">AI-КОПІРАЙТИНГ</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 SOLUTION: OPERATIONS -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">03</span>
+        <span class="section-title-sm">Нова операційна модель</span>
+      </div>
+
+      <p class="solution-intro">
+        Перехід до партнерської інфраструктури — це зміна бізнес-моделі
+        <strong>від фіксованих точок продажу до розподіленої мережі партнерів</strong>.
+      </p>
+
+      <div class="module-grid">
+        <div class="module">
+          <div class="module-num-badge">ТОЧКА КОНТАКТУ</div>
+          <h3>Навчання бариста</h3>
+          <p>
+            Відбувається у закладі клієнта-партнера. Виїзний тренер 1 раз на квартал або за запитом.
+          </p>
+          <div class="module-result">У закладі клієнта-партнера</div>
+        </div>
+
+        <div class="module">
+          <div class="module-num-badge">ТОЧКА КОНТАКТУ</div>
+          <h3>Перегляд обладнання</h3>
+          <p>
+            Мінімальна площа, лише для прийняття рішень. Інтерактивний онлайн-каталог із AR-елементами.
+          </p>
+          <div class="module-result">Шоурум у центрі Києва</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 STACK COMPARISON (BUDGET) -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">04</span>
+        <span class="section-title-sm">Орієнтовний бюджет автоматизації</span>
+      </div>
+
+      <div class="compare-wrap">
+        <div class="compare-col current">
+          <div class="compare-col-head current">Традиційні підходи</div>
+          <div class="compare-item">
+            <span class="compare-item-name">Junior-маркетолог</span>
+            <span class="compare-item-cost">~$500/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Менеджер з продажів</span>
+            <span class="compare-item-cost">~$700/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Копірайтер</span>
+            <span class="compare-item-cost">~$300/міс</span>
+          </div>
+          <div class="compare-total">
+            <span>Разом</span>
+            <span class="total-val">~$1500/міс</span>
+          </div>
+        </div>
+
+        <div class="compare-col aiunit">
+          <div class="compare-col-head aiunit">Автоматизований стек</div>
+          <div class="compare-item">
+            <span class="compare-item-name">CRM (Pipedrive / HubSpot)</span>
+            <span class="compare-item-cost">$15–25</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Чат-бот (Tidio / Manychat)</span>
+            <span class="compare-item-cost">$19–29</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Автопублікації (Buffer)</span>
+            <span class="compare-item-cost">$6–18</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">AI-тексти (ChatGPT Plus)</span>
+            <span class="compare-item-cost">$20</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Парсинг лідів & Automation</span>
+            <span class="compare-item-cost">$58–65</span>
+          </div>
+          <div class="compare-total">
+            <span>Разом (AI)</span>
+            <span class="total-val">$175–247/міс</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 ROADMAP -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">05</span>
+        <span class="section-title-sm">Roadmap імплементації</span>
+      </div>
+
+      <div class="roadmap-grid">
+        <div class="roadmap-phase">
+          <div class="phase-label">Фаза 1</div>
+          <div class="phase-name">Фундамент</div>
+          <div class="phase-timeline">Місяць 1–2</div>
+          <div class="phase-items">
+            <div class="phase-item">
+              <strong>Вибір та налаштування CRM</strong>
+              <span>→ Pipedrive або HubSpot</span>
+            </div>
+            <div class="phase-item">
+              <strong>Чат-бот на сайті</strong>
+              <span>→ Tidio або Manychat</span>
+            </div>
+            <div class="phase-item">
+              <strong>TOV-документ і скрипт</strong>
+              <span>→ Для бота і команди</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-phase">
+          <div class="phase-label">Фаза 2</div>
+          <div class="phase-name">Контент-машина</div>
+          <div class="phase-timeline">Місяць 2–4</div>
+          <div class="phase-items">
+            <div class="phase-item">
+              <strong>Контент-сток & Обробка</strong>
+              <span>→ Imagen AI та Airtable</span>
+            </div>
+            <div class="phase-item">
+              <strong>Парсинг бази лідів</strong>
+              <span>→ Перші 500–1000 контактів</span>
+            </div>
+            <div class="phase-item">
+              <strong>Email-розсилка</strong>
+              <span>→ Перший cold email (Mailchimp)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-phase">
+          <div class="phase-label">Фаза 3</div>
+          <div class="phase-name">Масштаб</div>
+          <div class="phase-timeline">Місяць 4–6</div>
+          <div class="phase-items">
+            <div class="phase-item">
+              <strong>Голосовий бот</strong>
+              <span>→ Vapi/Synthflow для дзвінків</span>
+            </div>
+            <div class="phase-item">
+              <strong>Шоурум: дизайн і запуск</strong>
+              <span>→ Мінімальна точка для демо</span>
+            </div>
+            <div class="phase-item">
+              <strong>Реферальна програма B2B</strong>
+              <span>→ Автоматичний облік в CRM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 CLOSING -->
+  <section class="closing-section">
+    <div class="container">
+      <div class="closing-statement">
+        Ця стратегія — перехід від <em>залежності</em> від людського фактору<br>
+        до побудови системи, яка <em>масштабується</em>.
+      </div>
+      <div class="closing-grid">
+        <div class="closing-block">
+          <div class="cl-label">Проєкт</div>
+          <div class="cl-value">Escobar Automation</div>
+        </div>
+        <div class="closing-block">
+          <div class="cl-label">Період</div>
+          <div class="cl-value">2025–2026</div>
+        </div>
+        <div class="closing-block">
+          <div class="cl-label">ROI</div>
+          <div class="cl-value">~$200/міс замінює штат</div>
+        </div>
+        <div class="closing-block">
+          <div class="cl-label">Статус</div>
+          <div class="cl-value">Внутрішній документ</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-brand" style="display: flex; align-items: center; gap: 8px;">
+        <svg height="20" viewBox="0 0 705.16 142.14" xmlns="http://www.w3.org/2000/svg" aria-label="Escobar Logo" style="display:block;fill:#f05423"><path d="M91,113.61c-.76,1.21-1.58,2.49-2.49,3.85-.9,1.36-1.89,2.64-2.94,3.85-3.32,4.23-7.43,8.04-12.34,11.43-4.91,3.4-10.68,5.09-17.32,5.09s-12.19-2.38-15.73-7.13c-3.55-4.75-5.32-12.79-5.32-24.11v-20.6h61.57c-.15-14.33-4.91-26.07-14.26-35.2-9.36-9.13-20.75-13.69-34.18-13.69-12.22,0-23.28,5.09-33.16,15.28C4.94,62.57,0,74.9,0,89.39s5.55,27.65,16.64,37.69c11.09,10.04,23.96,15.05,38.6,15.05,9.2,0,17.01-2.6,23.43-7.81,6.41-5.21,11.73-11.28,15.96-18.22l-3.62-2.49ZM34.86,66.98c0-1.36.04-2.9.11-4.64.07-1.74.19-3.51.34-5.32.6-3.92,1.92-7.47,3.96-10.64,2.04-3.17,5.47-4.75,10.3-4.75,5.88,0,9.81,2.3,11.77,6.9,1.96,4.61,3.09,9.7,3.4,15.28.15,1.21.23,2.42.23,3.62v14.26h-30.11v-14.71Z"/><path d="M165.69,80.79c-1.96-1.21-3.85-2.15-5.66-2.83-1.81-.68-3.4-1.17-4.75-1.47l-21.5-5.88c-.9-.3-1.89-.6-2.94-.91-1.06-.3-2.11-.68-3.17-1.13-2.72-1.21-5.25-2.94-7.58-5.21-2.34-2.26-3.51-5.43-3.51-9.51v-.68c.3-2.86,2.07-5.47,5.32-7.81,3.24-2.34,8.11-3.51,14.6-3.51,1.81,0,3.74.19,5.77.57,2.04.38,4.11,1.02,6.23,1.92,4.22,1.81,8.26,4.72,12.11,8.72,3.85,4,6.68,9.39,8.49,16.19h4.3v-30.56h-4.53c-.3,1.21-1.02,2.34-2.15,3.4-1.13,1.06-2.91,1.59-5.32,1.59-1.06,0-2.19-.23-3.39-.68-1.21-.45-2.94-1.13-5.21-2.04-.15-.15-.38-.26-.68-.34-.3-.07-.53-.11-.68-.11-2.11-.9-4.3-1.7-6.56-2.38-2.26-.68-4.98-1.02-8.15-1.02-2.12,0-4.41.15-6.9.45-2.49.3-5.09.83-7.81,1.59-5.58,1.51-10.68,4.38-15.28,8.6-4.6,4.23-6.9,10.57-6.9,19.02,0,7.4,1.28,13.28,3.85,17.66,2.57,4.38,5.43,7.62,8.6,9.74,1.51,1.06,3.02,1.92,4.53,2.6,1.51.68,2.86,1.17,4.07,1.47l20.6,5.89c.75.15,1.47.34,2.15.57.68.22,1.39.49,2.15.79,3.92,1.21,7.54,3.02,10.86,5.43,3.32,2.42,4.98,6.19,4.98,11.32,0,.61-.04,1.21-.11,1.81-.08.6-.19,1.21-.34,1.81-.76,2.72-2.68,5.21-5.77,7.47-3.09,2.26-8.04,3.4-14.83,3.4-9.96,0-18.22-3.58-24.79-10.75-6.56-7.16-10.53-15.2-11.88-24.11h-5.66v38.94l5.66-.23v-.68c.15-1.36.75-2.71,1.81-4.07,1.05-1.36,2.56-2.04,4.53-2.04h.79c.23,0,.41.08.57.23,1.21.15,2.45.6,3.73,1.36,1.28.76,2.83,1.59,4.64,2.49.3.15.64.3,1.02.45.38.15.79.3,1.25.45,2.56,1.05,5.13,1.89,7.7,2.49,2.56.6,5.51.9,8.83.9,1.66,0,3.32-.08,4.98-.22,1.66-.15,3.32-.38,4.98-.68,7.7-1.21,14.75-4.33,21.17-9.39,6.41-5.05,9.62-13.09,9.62-24.11,0-7.54-1.44-13.39-4.3-17.54-2.87-4.15-6.04-7.28-9.51-9.39Z"/><path d="M248.38,55.66c-.15.15-.3.34-.45.57-.15.23-.3.49-.45.79-.3.3-.64.64-1.02,1.02-.38.38-.72.79-1.02,1.25-.9,1.06-1.74,2.19-2.49,3.4-.76,1.21-1.13,2.64-1.13,4.3,0,4.68,1.25,8.72,3.74,12.11,2.49,3.39,6,5.09,10.53,5.09s8.34-1.55,11.43-4.64c3.09-3.09,4.64-7.36,4.64-12.79,0-8-3.59-14.9-10.75-20.71-7.17-5.81-15.05-8.86-23.65-9.17h-1.36c-1.36,0-2.75.08-4.19.23-1.44.15-2.91.3-4.41.45-11.32,1.97-21.7,7.6-31.13,16.9-9.43,9.3-14.15,21.66-14.15,37.09,0,12.86,4.94,24.5,14.83,34.94,9.88,10.43,22.82,15.65,38.82,15.65,2.56,0,5.81-.26,9.73-.79,3.92-.53,8-2.15,12.22-4.87,3.47-2.26,6.79-5.43,9.96-9.51,3.17-4.07,6.03-9.58,8.6-16.52l-4.08-1.59c-3.62,8.75-8.23,15.81-13.81,21.17-5.58,5.36-12.6,8.04-21.05,8.04-7.55,0-12.64-2.57-15.28-7.71-2.64-5.14-4.26-10.81-4.87-17.02,0-1.51-.04-3.02-.11-4.54-.08-1.51-.11-3.02-.11-4.54v-38.68c0-.99.07-2,.23-3.07.3-5.59,1.55-10.7,3.73-15.31,2.19-4.61,6.6-6.92,13.24-6.92,5.13,0,8.94,1.17,11.43,3.51,2.49,2.34,3.73,5.09,3.73,8.26,0,.61-.15,1.21-.45,1.81-.3.6-.6,1.21-.9,1.81Z"/><path d="M378.07,7.7h11.54v126.97h-11.09v4.53h42.78v-15.39c2.11,5.74,4.87,9.89,8.26,12.45,3.4,2.57,6.9,4.22,10.53,4.98,1.81.3,3.54.53,5.21.68,1.66.15,3.24.22,4.75.22,14.18,0,25.01-5.24,32.48-15.73,7.47-10.49,11.43-22.07,11.88-34.75v-2.04c0-15.4-4.91-27.99-14.71-37.8-9.81-9.81-20.6-14.71-32.37-14.71h-2.26c-5.28.45-10.26,2.23-14.94,5.32-4.68,3.09-7.62,6.98-8.83,11.66V0c-2.26.91-4.87,1.66-7.81,2.26-2.94.6-6.68.9-11.2.9h-24.22v4.53ZM421.76,87.01v-9.85c.15-10.26,1.47-17.69,3.96-22.3,2.49-4.6,5.32-7.66,8.49-9.17,1.36-.75,2.75-1.24,4.19-1.47,1.43-.23,2.68-.34,3.73-.34,4.38,0,8.38,2.19,12,6.56,3.62,4.38,5.43,12.75,5.43,25.13v24.67c0,9.66-1.06,18.19-3.17,25.58-2.11,7.39-6.79,11.09-14.04,11.09-6.34,0-10.9-2.75-13.69-8.26-2.79-5.51-4.64-11.51-5.55-17.99-.6-3.92-.98-7.66-1.13-11.21-.15-3.54-.23-6.6-.23-9.17v-3.28Z"/><path d="M553.5,37.1c-15.09,0-26.79,2.79-35.09,8.37-8.3,5.58-12.45,12-12.45,19.24,0,4.23,1.47,7.85,4.41,10.87,2.94,3.02,6.75,4.53,11.43,4.53,3.92,0,7.32-1.32,10.19-3.96,2.86-2.64,4.3-6,4.3-10.07,0-1.96-.34-3.7-1.02-5.21-.68-1.51-1.55-2.79-2.6-3.85-.15-.3-.34-.57-.57-.79-.23-.23-.49-.41-.79-.57-.15-.15-.27-.26-.34-.34-.08-.07-.19-.19-.34-.34-.76-.76-1.47-1.59-2.15-2.49-.68-.9-1.02-2.04-1.02-3.4,0-.3.07-.64.23-1.02.15-.37.3-.71.45-1.02.9-1.36,2.79-2.6,5.66-3.73,2.87-1.13,6.87-1.7,12-1.7,4.68,0,8.11.94,10.3,2.83,2.19,1.89,3.66,3.89,4.41,6,.45,1.36.75,2.6.91,3.73.15,1.13.23,2.15.23,3.06v26.26c-2.11.15-4.23.26-6.34.34-2.12.08-4.3.19-6.56.34-12.98.76-24.87,3.1-35.65,7.02-10.79,3.93-16.19,11.92-16.19,24,0,7.39,2.72,13.73,8.15,19.01,5.43,5.28,12.98,7.92,22.64,7.92h2.15c.68,0,1.32-.08,1.92-.22,5.43-.45,10.75-1.97,15.96-4.53,5.21-2.57,9.85-6.34,13.92-11.32,1.21,3.77,3.32,7.02,6.34,9.73,3.02,2.72,6.26,4.6,9.73,5.66.75.15,1.55.3,2.38.45.83.15,1.62.22,2.38.22,3.02,0,6.19-.38,9.51-1.13,3.32-.76,6.71-2.26,10.19-4.53,1.21-.9,2.49-2,3.85-3.28,1.36-1.28,2.72-2.68,4.07-4.19l-3.17-2.94c-.76,1.06-1.58,1.89-2.49,2.49-.9.6-1.81,1.06-2.72,1.36-1.06.3-2.11.49-3.17.57-1.06.08-1.96.11-2.72.11-1.06,0-1.74-.68-2.04-2.04-.3-1.36-.45-2.79-.45-4.3V57.47c0-1.05-.08-2.18-.23-3.39-.15-1.21-.53-2.41-1.13-3.62-1.36-3.32-4.75-6.37-10.19-9.17-5.43-2.79-14.87-4.19-28.3-4.19ZM561.65,121.76c-1.81,1.66-3.51,3.09-5.09,4.3-1.59,1.21-3.21,2.19-4.87,2.94-1.21.61-2.45,1.06-3.73,1.36-1.28.3-2.6.45-3.96.45-4.53,0-7.58-1.17-9.17-3.51-1.59-2.34-2.53-4.87-2.83-7.58-.15-1.05-.23-2.07-.23-3.06v-4.42c0-1.36.04-2.94.11-4.75.07-1.81.41-3.62,1.02-5.43,1.21-3.47,3.85-6.68,7.92-9.62,4.07-2.94,11.01-4.64,20.82-5.09v34.41Z"/><path d="M645.97,39.36c-2.94.6-6.68.9-11.2.9h-24.22v4.53h11.54v89.87h-11.09v4.53h53.88v-4.53h-11.09v-59.08c0-10.11,1.81-18.18,5.43-24.22,3.62-6.03,8.3-9.05,14.04-9.05h.9c1.05,0,2,.15,2.83.45.83.3,1.25.9,1.25,1.81,0,.3-.04.68-.11,1.13-.08.45-.19.83-.34,1.13-.15.45-.38.9-.68,1.36-.3.45-.53.91-.68,1.36-.3.3-.53.6-.68.9-.15.3-.3.6-.45.9-1.06,1.96-1.66,3.85-1.81,5.66-.15,1.81-.23,3.32-.23,4.53,0,4.38,1.21,7.66,3.62,9.84,2.41,2.19,4.98,3.59,7.7,4.19.6,0,1.17.04,1.7.11.53.08,1.09.11,1.7.11,4.83,0,8.9-1.59,12.22-4.75,3.32-3.17,4.98-7.54,4.98-13.13,0-.75-.11-2.07-.34-3.96-.23-1.88-.94-3.96-2.15-6.23-1.51-2.56-4-4.98-7.47-7.24-3.47-2.26-8.6-3.4-15.39-3.4-5.58,0-10.64,1.13-15.17,3.4-4.53,2.26-8.08,5.43-10.64,9.51h-.23v-12.9c-2.26.9-4.87,1.66-7.81,2.26Z"/><path d="M329.87,37.1c-12.84,0-24.57,4.91-35.21,14.72-10.63,9.81-16.03,22.49-16.18,38.03-.16,13.44,3.96,24.65,12.34,33.62,8.38,8.98,17.61,14.68,27.73,17.09,1.96.61,3.88,1.03,5.77,1.25,1.88.22,3.74.34,5.55.34,1.5,0,3.05-.08,4.63-.22,1.59-.16,3.14-.38,4.64-.68,10.56-2.12,20.27-7.73,29.09-16.86,8.83-9.13,13.25-20.64,13.25-34.53s-4.27-25.08-12.8-34.07c-8.52-8.97-17.91-14.74-28.17-17.31-1.82-.46-3.59-.8-5.33-1.03-1.74-.22-3.51-.34-5.31-.34ZM346.61,72.98c6.63,13.63,12.71,28.13,12.71,35.51,0,15.34-11.76,27.92-26.75,29.21-.38.04-.78.07-1.18.09-.13,0-.28.01-.41.01-.24.01-.47.03-.71.01-.13.01-.26.01-.39.01-.92,0-1.82-.04-2.64-.13-.08,0-.17-.01-.25-.03-14.8-1.5-26.35-13.99-26.35-29.19,0-7.38,6.08-21.98,12.71-35.66,7.87-16.24,16.51-31.2,16.64-31.2,0,0,8.71,15.03,16.64,31.34Z"/></svg>
+        ESCOBAR COFFEE — Стратегія автоматизації
+      </div>
+      <div class="footer-doc">ВНУТРІШНІЙ СТРАТЕГІЧНИЙ ДОКУМЕНТ // 2025-2026</div>
+    </div>
+  </footer>
+
+</body>
+
+</html>

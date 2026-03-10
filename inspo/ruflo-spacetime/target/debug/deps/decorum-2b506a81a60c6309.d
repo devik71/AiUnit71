@@ -1,0 +1,11 @@
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/decorum-2b506a81a60c6309.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/canonical.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/cmp.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/constraint.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/hash.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/primitive.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/proxy.rs
+
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/libdecorum-2b506a81a60c6309.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/canonical.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/cmp.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/constraint.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/hash.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/primitive.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/proxy.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/canonical.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/cmp.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/constraint.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/hash.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/primitive.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/decorum-0.3.1/src/proxy.rs:

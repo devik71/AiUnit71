@@ -2,6 +2,8 @@ import type { RoomConfig, Task, CostRecord } from "../core/types.js";
 import { AutonomyLevel } from "../core/types.js";
 import { BaseRoom } from "./base-room.js";
 import type { MemoryStore } from "../memory/memory-store.js";
+import type { McpHost } from "../mcp/host.js";
+
 import type { CostRouter } from "../cost/router.js";
 import { LlmClient } from "../llm/llm-client.js";
 import type { ChatMessage } from "../llm/llm-client.js";
@@ -70,8 +72,8 @@ Be fair but strict. The quality gate passes at 70+.`,
 export class EvaluationRoom extends BaseRoom {
     private llm: LlmClient;
 
-    constructor(memory: MemoryStore, costRouter: CostRouter) {
-        super(CONFIG, memory, costRouter);
+    constructor(memory: MemoryStore, mcpHost: McpHost, costRouter: CostRouter) {
+        super(CONFIG, memory, mcpHost, costRouter);
         this.llm = new LlmClient();
     }
 
@@ -128,7 +130,7 @@ export class EvaluationRoom extends BaseRoom {
         ];
 
         try {
-            const response = await this.llm.chat({
+            const response = await this.runWithTools(this.llm, {
                 model: route.selected.model,
                 messages,
                 temperature: 0.2,

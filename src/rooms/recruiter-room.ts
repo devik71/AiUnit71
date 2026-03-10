@@ -3,6 +3,8 @@ import type { RoomConfig, Task, CostRecord, AgentConfig } from "../core/types.js
 import { AutonomyLevel } from "../core/types.js";
 import { BaseRoom } from "./base-room.js";
 import type { MemoryStore } from "../memory/memory-store.js";
+import type { McpHost } from "../mcp/host.js";
+
 import type { CostRouter } from "../cost/router.js";
 import { LlmClient } from "../llm/llm-client.js";
 import type { ChatMessage } from "../llm/llm-client.js";
@@ -45,8 +47,8 @@ export class RecruiterRoom extends BaseRoom {
     private llm: LlmClient;
     private skillMaster: SkillMaster;
 
-    constructor(memory: MemoryStore, costRouter: CostRouter, skillsDir?: string) {
-        super(CONFIG, memory, costRouter);
+    constructor(memory: MemoryStore, mcpHost: McpHost, costRouter: CostRouter, skillsDir?: string) {
+        super(CONFIG, memory, mcpHost, costRouter);
         this.llm = new LlmClient();
         this.skillMaster = new SkillMaster(skillsDir ?? DEFAULT_SKILLS_DIR);
     }
@@ -105,11 +107,11 @@ export class RecruiterRoom extends BaseRoom {
         let agentConfig: AgentConfig | null = null;
 
         try {
-            const response = await this.llm.chat({
+            const response = await this.runWithTools(this.llm, {
                 model: route.selected.model,
                 messages,
-                temperature: 0.6,
-                maxTokens: 2048,
+                temperature: 0.7,
+                maxTokens: 4096,
             });
 
             const costRecord: CostRecord = {

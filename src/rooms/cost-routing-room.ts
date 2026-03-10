@@ -2,6 +2,8 @@ import type { RoomConfig, Task } from "../core/types.js";
 import { AutonomyLevel } from "../core/types.js";
 import { BaseRoom } from "./base-room.js";
 import type { MemoryStore } from "../memory/memory-store.js";
+import type { McpHost } from "../mcp/host.js";
+
 import { CostRouter } from "../cost/router.js";
 import { MODEL_OPTIONS } from "../cost/pricing-table.js";
 
@@ -29,8 +31,8 @@ const CONFIG: RoomConfig = {
 };
 
 export class CostRoutingRoom extends BaseRoom {
-  constructor(memory: MemoryStore, costRouter: CostRouter) {
-    super(CONFIG, memory, costRouter);
+  constructor(memory: MemoryStore, mcpHost: McpHost, costRouter: CostRouter) {
+    super(CONFIG, memory, mcpHost, costRouter);
   }
 
   /** Get a comprehensive cost comparison for a set of capabilities */

@@ -8,6 +8,13 @@ import { MemoryStore } from "../src/memory/memory-store.js";
 import { CostRouter } from "../src/cost/router.js";
 import { TaskStatus, TaskPriority } from "../src/core/types.js";
 import type { Task } from "../src/core/types.js";
+import type { McpHost } from "../src/mcp/host.js";
+
+const mockMcpHost = {
+    connect: async () => {},
+    callTool: async () => "",
+    getAvailableTools: async () => [],
+} as unknown as McpHost;
 
 // ─── Mock Responses ──────────────────────────────────────────────
 
@@ -109,7 +116,7 @@ describe("JobMasterRoom", () => {
     beforeEach(() => {
         fetchSpy = vi.fn();
         vi.stubGlobal("fetch", fetchSpy);
-        room = new JobMasterRoom(new MemoryStore(), new CostRouter());
+        room = new JobMasterRoom(new MemoryStore(), mockMcpHost, new CostRouter());
     });
 
     afterEach(() => {

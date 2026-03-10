@@ -1,0 +1,284 @@
+# =============================================================================
+# AiUnit71 Agency Configuration
+# =============================================================================
+# Governs runtime behavior: model routing, approval policies, budget guards,
+# skill registration, SONA learning, and mission profiles.
+#
+# Inspired by: ruflo config.toml (Claude Flow V3)
+# =============================================================================
+
+# =============================================================================
+# Core Settings
+# =============================================================================
+
+agency = "AiUnit71"
+version = "0.4.0"
+
+# Default model for creative production tasks
+# Options: claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5-20251001
+model = "claude-sonnet-4-6"
+
+# Approval policy: when does execution pause for human input?
+# - always: every phase requires approval (autonomy_level 1 — pilot clients)
+# - on-gate: pause only at designated HITL gates (autonomy_level 2 — retainer clients)
+# - on-failure: pause only when QC threshold not met
+# - never: fully autonomous (autonomy_level 3 — trusted clients with approved MCO)
+approval_policy = "on-gate"
+
+# =============================================================================
+# Model Routing (3-Tier)
+# =============================================================================
+# Route tasks to the right model by type — balance quality vs cost.
+
+[model_routing]
+# Strategic + planning tasks → Opus (best reasoning)
+coordinator  = "claude-opus-4-6"
+
+# Production tasks → Sonnet (best quality/cost ratio)
+producer     = "claude-sonnet-4-6"
+
+# Validation, formatting, batch checks → Haiku (fast + cheap)
+validator    = "claude-haiku-4-5-20251001"
+
+# Intelligence / research tasks → Sonnet
+intelligence = "claude-sonnet-4-6"
+
+# Optimizer → Sonnet
+optimizer    = "claude-sonnet-4-6"
+
+# =============================================================================
+# Skill Registry
+# =============================================================================
+# All active skills. Set enabled = false to disable without removing.
+
+[[skills]]
+path   = "skills/aiunit71/mission-planner"
+type   = "coordinator"
+color  = "#00303C"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/task-orchestrator"
+type   = "coordinator"
+color  = "#00303C"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/client-researcher"
+type   = "intelligence"
+color  = "#8E44AD"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/niche-adapter"
+type   = "intelligence"
+color  = "#8E44AD"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/sona-learning"
+type   = "intelligence"
+color  = "#8E44AD"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/copywriting"
+type   = "producer"
+color  = "#FF5100"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/social-content"
+type   = "producer"
+color  = "#FF5100"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/visual-prompt-engineering"
+type   = "producer"
+color  = "#FF5100"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/mascot-animation"
+type   = "producer"
+color  = "#FF5100"
+enabled = false  # Enable per-client when brand animation is in scope
+
+[[skills]]
+path   = "skills/aiunit71/parallel-creative-flow"
+type   = "optimizer"
+color  = "#16A085"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/output-reviewer"
+type   = "validator"
+color  = "#C0392B"
+enabled = true
+
+[[skills]]
+path   = "skills/aiunit71/anti-slop"
+type   = "validator"
+color  = "#C0392B"
+enabled = true
+
+# =============================================================================
+# Mission Profiles
+# =============================================================================
+# Profiles control runtime behavior per client engagement type.
+# Activate with: --profile pilot | retainer | autonomous
+
+# Pilot / first mission — maximum oversight, every gate requires approval
+[profiles.pilot]
+approval_policy   = "always"
+model_coordinator = "claude-opus-4-6"
+model_producer    = "claude-sonnet-4-6"
+sona_enabled      = false           # No patterns yet for this niche
+hitl_gates        = "all"
+budget_reserve    = 0.30            # 30% held in reserve for corrections
+max_retries       = 3
+
+# Retainer — established client, approve only at delivery gate
+[profiles.retainer]
+approval_policy   = "on-gate"
+model_coordinator = "claude-sonnet-4-6"
+model_producer    = "claude-sonnet-4-6"
+sona_enabled      = true
+hitl_gates        = "delivery"
+budget_reserve    = 0.20
+max_retries       = 3
+
+# Rush / autonomous — trusted client, pre-approved MCO, no gates
+[profiles.rush]
+approval_policy   = "on-failure"
+model_coordinator = "claude-sonnet-4-6"
+model_producer    = "claude-sonnet-4-6"
+sona_enabled      = true
+hitl_gates        = "none"
+budget_reserve    = 0.15
+max_retries       = 2
+
+# =============================================================================
+# Budget Settings
+# =============================================================================
+
+[budget]
+# Hard stop — mission halts if total exceeds this multiple of estimate
+max_overage_ratio = 1.20      # Allow up to 20% budget overrun before hard stop
+
+# Default reserve held back for retries and corrections
+default_reserve   = 0.20      # 20% of mission budget
+
+# Alert threshold — surface warning before hard stop
+alert_threshold   = 0.80      # Alert at 80% of spendable budget
+
+# Cost tracking precision
+currency          = "USD"
+log_per_phase     = true
+
+# =============================================================================
+# Quality Thresholds
+# =============================================================================
+
+[quality]
+# Minimum score to pass output-reviewer (per dimension and overall)
+pass_threshold       = 7.0
+
+# Score below this triggers immediate HITL escalation (not just retry)
+escalate_threshold   = 5.0
+
+# Maximum retries per deliverable before HITL escalation
+max_retries_per_item = 3
+
+# Maximum retries per batch before stopping entire batch
+max_batch_retries    = 2
+
+# Dimensions scored (weight distribution if weighted scoring is added)
+dimensions = [
+  "brief_compliance",
+  "brand_voice",
+  "audience_fit",
+  "anti_slop",
+  "execution_quality"
+]
+
+# =============================================================================
+# SONA Learning
+# =============================================================================
+
+[sona]
+enabled           = true
+persist_path      = "data/sona/patterns.json"
+min_score_to_store = 7.0         # Only store outputs that pass QC
+retrieve_k        = 3            # Top-k exemplars per pre-task hook
+min_score_to_retrieve = 7.0      # Only retrieve patterns above this score
+store_failures    = false        # Set true to store failure patterns as anti-examples
+
+# =============================================================================
+# Fault Tolerance
+# =============================================================================
+# Creative production equivalent of Byzantine fault tolerance.
+
+[fault_tolerance]
+# Max failures per production room before escalating to HITL
+max_room_failures      = 3
+
+# If a parallel branch fails this many times, isolate it — others continue
+max_branch_failures    = 3
+
+# Graceful degradation: if optional deliverable room fails, continue without it
+allow_partial_delivery = true
+
+# MCO completeness check before mission starts (fail fast)
+mco_preflight_check    = true
+
+# Required MCO fields before any production phase can start
+mco_required_fields = [
+  "client.name",
+  "mission.deliverables",
+  "mission.budget.total",
+  "mission.autonomy_level",
+  "brand.voice",
+  "audience.primary"
+]
+
+# =============================================================================
+# Performance
+# =============================================================================
+
+[performance]
+# Maximum concurrent rooms active at once
+max_concurrent_rooms = 3
+
+# Phase timeout in seconds (failsafe — prevents infinite hangs)
+phase_timeout_sec    = 600       # 10 minutes
+
+# Cache recent MCO reads
+cache_mco            = true
+cache_ttl_sec        = 300
+
+# =============================================================================
+# Logging
+# =============================================================================
+
+[logging]
+level       = "info"             # debug | info | warn | error
+format      = "pretty"           # json | text | pretty
+log_costs   = true               # Log per-phase cost
+log_phases  = true               # Log phase start/end with timestamp
+log_sona    = false              # Set true to debug SONA pattern retrieval
+
+# =============================================================================
+# Security
+# =============================================================================
+
+[security]
+# Never include these patterns in MCO or deliverable files
+blocked_patterns = ["\\.env$", "credentials\\.json$", "*.key"]
+
+# Mask client PII in logs
+mask_pii_in_logs = true
+
+# Block any tool that writes outside the project workspace
+workspace_only = true

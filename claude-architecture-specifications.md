@@ -144,7 +144,7 @@ AiUnit71 — операційна система для креативного �
 |**Visual Prompter**|Standard|Конвертація semantic JSON в model-native формат                    |
 |**Prompt Critic**  |Standard|Валідація промптів перед генерацією                                |
 |**QC Agent**       |Power   |Перевірка якості, порівняння з brand guidelines                    |
-|**SkillMaster**    |Standard|Підбір та створення skill packs для агентів                        |
+|**SkillMaster**    |Standard|Підбір та створення skill packs для агентів (включає обов'язковий mcp_integration) |
 
 ### Агенти за викликом (spawn по потребі)
 

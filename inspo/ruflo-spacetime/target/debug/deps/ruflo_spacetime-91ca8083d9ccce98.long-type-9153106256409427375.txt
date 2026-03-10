@@ -1,0 +1,2 @@
+for<'a> fn(&'a ReducerContext, std::string::String, std::string::String) -> Result<(), std::string::String> {update_mco}
+for<'a> fn(&'a ReducerContext, std::string::String, std::string::String) -> Result<(), std::string::String> {update_mco}: Reducer<'_, _, _>

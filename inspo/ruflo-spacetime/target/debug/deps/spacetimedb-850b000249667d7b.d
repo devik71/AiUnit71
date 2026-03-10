@@ -1,0 +1,11 @@
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/spacetimedb-850b000249667d7b.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/log_stopwatch.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/logger.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/rng.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/rt.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/table.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/../README.md
+
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/libspacetimedb-850b000249667d7b.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/log_stopwatch.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/logger.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/rng.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/rt.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/table.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/../README.md
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/log_stopwatch.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/logger.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/rng.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/rt.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/table.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-2.0.3/src/../README.md:

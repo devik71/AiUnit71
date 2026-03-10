@@ -1,0 +1,11 @@
+[package]
+name = "ruflo-spacetime"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+spacetimedb = "0.10.0"
+log = "0.4.29"

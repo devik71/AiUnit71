@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Superbox Storyboard System 2.0</title>
+  <script>
+    window.onerror = function(msg,src,line,col,err){
+      document.body.innerHTML='<div style="padding:32px;font-family:monospace;background:#000;color:#FF4444;white-space:pre-wrap;font-size:13px"><b>SCRIPT ERROR</b>\n'+msg+'\nLine '+line+':'+col+'\n'+(err&&err.stack||'')+'</div>';
+    };
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;color:#FFFFFF}
+    body{background:#000000;font-family:'Courier New',monospace;color:#FFFFFF}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:#000}
+    ::-webkit-scrollbar-thumb{background:#00FFFF;border-radius:3px}
+    .note-editor{caret-color:#00FFFF}
+    .note-editor h1{font-size:22px;font-weight:900;color:#00FFFF;margin:12px 0 6px;line-height:1.3}
+    .note-editor h2{font-size:17px;font-weight:700;color:#FF95DA;margin:10px 0 5px;line-height:1.3}
+    .note-editor h3{font-size:13px;font-weight:700;color:#EEE;margin:8px 0 3px}
+    .note-editor p{margin:3px 0}
+    .note-editor ul,.note-editor ol{padding-left:22px;margin:4px 0}
+    .note-editor li{margin:2px 0;line-height:1.6}
+    .note-editor blockquote{border-left:3px solid #00FFFF55;margin:8px 0;padding-left:14px;color:#888;font-style:italic}
+    .note-editor pre{background:#0A0A0A;border-radius:4px;padding:8px 12px;font-family:'Courier New',monospace;color:#4AC262;font-size:12px;white-space:pre-wrap;margin:6px 0}
+    .note-editor b,.note-editor strong{font-weight:700}
+    .note-editor a{color:#00FFFF;text-decoration:underline}
+    .note-editor:focus{outline:none}
+    .note-editor:empty::before{content:attr(data-placeholder);color:#2A2A2A;pointer-events:none;display:block}
+    .tbtn{background:transparent;border:1px solid #222;border-radius:3px;color:#AAA;padding:3px 7px;cursor:pointer;font-family:'Courier New',monospace;font-size:11px;transition:background 0.1s,color 0.1s}
+    .tbtn:hover{background:#1A2A2A;color:#FFF}
+    .step-card{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.15s}
+    .step-card:hover{filter:brightness(1.15)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    .claim-dot{animation:pulse 1.5s ease-in-out infinite}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+    .activity-item{animation:slideIn 0.25s ease}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ============================================================
+// SUPERBOX STORYBOARD SYSTEM 2.0
+// NEW: named players · task claiming · big progress counter
+//      live clock · activity feed · version history
+// palette: #00FFFF · #FF95DA · #4AC262 · #000000
+// ============================================================
+
+const GLYPHS = {
+  body_front:{id:"BF",label:"Front",desc:"Mascot facing us"},
+  body_side_l:{id:"BSL",label:"Side L",desc:"Turned left"},
+  body_side_r:{id:"BSR",label:"Side R",desc:"Turned right"},
+  body_lean_fwd:{id:"BLF",label:"Lean Fwd",desc:"Forward lean / bow"},
+  body_split:{id:"BSP",label:"Split",desc:"Silhouette split"},
+  body_merge:{id:"BMG",label:"Merge",desc:"Merge back"},
+  body_melt:{id:"BMT",label:"Melt",desc:"Melting down"},
+  body_glitch:{id:"BGL",label:"Glitch",desc:"Full body glitch"},
+  body_shake:{id:"BSH",label:"Shake",desc:"Trembling"},
+  body_tense:{id:"BTS",label:"Tense",desc:"Tension pose"},
+  face_smile:{id:"FS",label:"😊",desc:"Standard smile"},
+  face_cool:{id:"FC",label:"😎",desc:"Cool face (glasses)"},
+  face_surprise:{id:"FX",label:"😮",desc:"Surprise"},
+  face_sad:{id:"FD",label:"😢",desc:"Sad face"},
+  face_squeeze:{id:"FQ",label:"😣",desc:"Squinted"},
+  face_smart:{id:"FM",label:"🤓",desc:"Smart glasses"},
+  face_dollar:{id:"F$",label:"$",desc:"Dollar sign face"},
+  face_euro:{id:"F€",label:"€",desc:"Euro sign face"},
+  face_qr:{id:"FQR",label:"QR",desc:"QR code face"},
+  face_check:{id:"F✓",label:"✅",desc:"Checkmark face"},
+  face_closed:{id:"FZ",label:"😴",desc:"Eyes closed"},
+  face_wink:{id:"FW",label:"😉",desc:"Wink"},
+  eyes_track_l:{id:"EL",label:"👀←",desc:"Looking left"},
+  eyes_track_r:{id:"ER",label:"👀→",desc:"Looking right"},
+  eyes_track_obj:{id:"ET",label:"👀⟲",desc:"Tracking object"},
+  eyes_scan:{id:"ES",label:"👀↕",desc:"Scanning up/down"},
+  eyes_visor:{id:"EV",label:"🖐👀",desc:"Hand visor"},
+  hand_appear_l:{id:"HL",label:"✋←",desc:"Left hand appears"},
+  hand_appear_r:{id:"HR",label:"✋→",desc:"Right hand appears"},
+  hand_grab:{id:"HG",label:"🤏",desc:"Hand grabbing"},
+  hand_throw:{id:"HT",label:"🤾",desc:"Throw"},
+  hand_stretch:{id:"HS",label:"↔✋",desc:"Arms stretching"},
+  hand_hold_2:{id:"H2",label:"✋✋",desc:"Two hands holding"},
+  hand_juggle:{id:"HJ",label:"🤹",desc:"Juggling"},
+  hand_extend:{id:"HE",label:"✋→📄",desc:"Extending object"},
+  hand_hide:{id:"HH",label:"🫣",desc:"Hiding behind back"},
+  obj_text_popup:{id:"OT",label:"+TXT⬆",desc:"Popup text"},
+  obj_banknote:{id:"OB",label:"💵",desc:"Banknote"},
+  obj_card:{id:"OC",label:"💳",desc:"Bank card"},
+  obj_gold:{id:"OG",label:"🥇",desc:"Gold bar"},
+  obj_wallet:{id:"OW",label:"👛",desc:"Wallet"},
+  obj_coin_a:{id:"OA",label:"🪙A",desc:"Coin A"},
+  obj_coin_b:{id:"OB2",label:"🪙B",desc:"Coin B"},
+  obj_envelope:{id:"OE",label:"✉️",desc:"Envelope"},
+  obj_document:{id:"OD",label:"📄",desc:"Document"},
+  obj_scroll:{id:"OS",label:"📜",desc:"Scroll"},
+  obj_heart:{id:"OH",label:"❤️",desc:"Heart"},
+  obj_tear:{id:"OTR",label:"💧",desc:"Tear"},
+  obj_dialog:{id:"ODG",label:"💬",desc:"Dialog bubble"},
+  obj_stamp_x:{id:"OSX",label:"❌📄",desc:"Rejection stamp"},
+  obj_like:{id:"OL",label:"👍",desc:"Like"},
+  obj_stack:{id:"OST",label:"💰",desc:"Stack of bills"},
+  fx_recycle:{id:"⟲",label:"⟲",desc:"Exchange/cycle sign"},
+  fx_scan_line:{id:"▓",label:"▓↓",desc:"Scanner line"},
+  fx_pixel_grow:{id:"◉",label:"◉→□",desc:"Pixel grows"},
+  fx_cascade:{id:"❤❤❤",label:"❤×N",desc:"Object cascade"},
+  fx_transform:{id:"→",label:"A→B",desc:"Transform"},
+  flow_arrow:{id:"→",label:"→",desc:"Next step"},
+  flow_dash:{id:"—",label:"—",desc:"Separator"},
+  flow_pause:{id:"⏸",label:"⏸",desc:"Pause"},
+};
+
+const SCENARIOS = [
+  {id:1,title:"Crypto Buy/Sell",titleEn:"Crypto Buy/Sell",color:"#F7931A",steps:[{glyph:"body_front",layer:"body",note:"Standing straight"},{glyph:"face_smile",layer:"faceplate",note:"Smile"},{glyph:"obj_text_popup",layer:"external",note:"+BTC / +ERC / +SOL up"},{glyph:"face_cool",layer:"faceplate",note:"Cool face"},{glyph:"face_smile",layer:"faceplate",note:"Back to smile"}],nonBodyTasks:["Faceplate: smile → cool → smile","External: popup text +BTC/+ERC/+SOL flying up"]},
+  {id:2,title:"Currency Buy/Sell",titleEn:"Currency Buy/Sell",color:"#2E86AB",steps:[{glyph:"body_front",layer:"body",note:"Standing"},{glyph:"body_split",layer:"body",note:"Split"},{glyph:"obj_banknote",layer:"external",note:"Banknotes fly between"},{glyph:"body_merge",layer:"body",note:"Merge back"},{glyph:"face_smile",layer:"faceplate",note:"Smile"}],nonBodyTasks:["External: banknotes fly between two silhouettes","Faceplate: smile on both during split"]},
+  {id:3,title:"Currency Exchange",titleEn:"Currency Exchange",color:"#4CAF50",steps:[{glyph:"body_front",layer:"body",note:"Standing"},{glyph:"eyes_track_obj",layer:"face_anim",note:"Eyes track banknote"},{glyph:"obj_banknote",layer:"external",note:"Banknote flies in"},{glyph:"face_dollar",layer:"faceplate",note:"Face → $"},{glyph:"fx_recycle",layer:"external",note:"Exchange sign"},{glyph:"face_euro",layer:"faceplate",note:"Face → €"},{glyph:"obj_banknote",layer:"external",note:"Banknote flies out"},{glyph:"face_smile",layer:"faceplate",note:"Smile returns"},{glyph:"eyes_track_obj",layer:"face_anim",note:"Eyes follow out"}],nonBodyTasks:["Face anim: track banknote left→center","Faceplate: smile → $ → ⟲ → € → smile","External: banknote in then out","Face anim: eyes follow out center→right"]},
+  {id:4,title:"Card Issuance",titleEn:"Card Issuance",color:"#9C27B0",steps:[{glyph:"body_side_r",layer:"body",note:"Turned sideways"},{glyph:"obj_card",layer:"external",note:"Card pops from body"},{glyph:"face_surprise",layer:"faceplate",note:"Surprise"},{glyph:"eyes_track_obj",layer:"face_anim",note:"Looking at card"},{glyph:"hand_grab",layer:"body",note:"Grabs card"},{glyph:"body_front",layer:"body",note:"Turns front"},{glyph:"hand_extend",layer:"body",note:"Extends card to camera"},{glyph:"face_smile",layer:"faceplate",note:"Smile"}],nonBodyTasks:["Faceplate: surprise → smile","Face anim: track card on exit","External: card exits like toast from toaster"]},
+  {id:5,title:"Gold Sale",titleEn:"Gold Sale",color:"#FFD700",steps:[{glyph:"body_front",layer:"body",note:"Standing"},{glyph:"face_squeeze",layer:"faceplate",note:"Squinting"},{glyph:"body_tense",layer:"body",note:"Tension"},{glyph:"obj_gold",layer:"external",note:"Gold bars fly up (3-5)"},{glyph:"obj_gold",layer:"external",note:"Fall in pyramid"},{glyph:"fx_transform",layer:"external",note:"Gold → stacks of bills"},{glyph:"obj_stack",layer:"external",note:"Bill stacks"},{glyph:"face_smile",layer:"faceplate",note:"Relax, smile"}],nonBodyTasks:["Faceplate: squeeze → smile","External: gold bars fly out","External: gold transforms to bills"]},
+  {id:6,title:"Cashin / Cashout",titleEn:"Cashin / Cashout",color:"#00BCD4",steps:[{glyph:"body_front",layer:"body",note:"Standing"},{glyph:"obj_wallet",layer:"external",note:"Wallet appears"},{glyph:"obj_banknote",layer:"external",note:"Fill / empty"},{glyph:"face_smile",layer:"faceplate",note:"Joy (cashin)"},{glyph:"face_sad",layer:"faceplate",note:"Philosophical sadness (cashout)"}],nonBodyTasks:["Faceplate: smile (cashin) OR sad (cashout)","External: wallet fill/empty animation"]},
+  {id:7,title:"QR Code",titleEn:"QR Code",color:"#333333",steps:[{glyph:"body_front",layer:"body",note:"Standing"},{glyph:"face_smile",layer:"faceplate",note:"Looking at camera"},{glyph:"hand_stretch",layer:"body",note:"Hands stretch face"},{glyph:"face_qr",layer:"faceplate",note:"Face → QR code"},{glyph:"face_smile",layer:"faceplate",note:"Release, face back"},{glyph:"face_wink",layer:"faceplate",note:"Wink"}],nonBodyTasks:["Faceplate: morph smile → QR → smile","Face anim: wink at end"]},
+  {id:8,title:"Boot Sequence",titleEn:"Boot Sequence",color:"#1A237E",steps:[{glyph:"fx_pixel_grow",layer:"external",note:"One pixel → full screen"},{glyph:"face_closed",layer:"faceplate",note:"Eyes closed"},{glyph:"eyes_scan",layer:"face_anim",note:"Opens, scans sides"},{glyph:"face_smile",layer:"faceplate",note:"Smile"}],nonBodyTasks:["External: pixel grows to fill screen","Faceplate: closed → open → smile","Face anim: look left → right → center"]},
+  {id:9,title:"Out of Service",titleEn:"Out of Service",color:"#B71C1C",steps:[{glyph:"body_front",layer:"body",note:"Standing"},{glyph:"obj_dialog",layer:"external",note:"Dialog window"},{glyph:"obj_text_popup",layer:"external",note:"OUT OF SERVICE letter by letter"},{glyph:"body_melt",layer:"body",note:"Melting down"},{glyph:"body_shake",layer:"body",note:"Shaking"},{glyph:"body_front",layer:"body",note:"Snaps back"}],nonBodyTasks:["External: dialog with typed text animation","Face anim: shaking during body_shake"]},
+  {id:10,title:"No Connection",titleEn:"No Connection",color:"#607D8B",steps:[{glyph:"body_glitch",layer:"body",note:"Full character glitches"}],nonBodyTasks:["Faceplate: glitch effect","Face anim: glitch artifacts","External: positional glitch shifts"]},
+  {id:11,title:"Success",titleEn:"Success",color:"#E91E63",steps:[{glyph:"obj_heart",layer:"external",note:"Hearts fly out"},{glyph:"fx_cascade",layer:"external",note:"Heart cascade"},{glyph:"body_lean_fwd",layer:"body",note:"Bow"},{glyph:"body_front",layer:"body",note:"Straighten"},{glyph:"face_wink",layer:"faceplate",note:"Wink"}],nonBodyTasks:["External: hearts one → two → cascade","Faceplate: wink at end"]},
+  {id:12,title:"Failure",titleEn:"Failure",color:"#795548",steps:[{glyph:"face_sad",layer:"faceplate",note:"Sad face"},{glyph:"obj_tear",layer:"external",note:"Tear from eye"},{glyph:"obj_tear",layer:"external",note:"Drop falls, shatters"}],nonBodyTasks:["Faceplate: transition to sad","Face anim: tear generation","External: drop physics — fall + shatter"]},
+  {id:13,title:"Verification OK",titleEn:"Verification OK",color:"#4CAF50",steps:[{glyph:"fx_scan_line",layer:"external",note:"Green scan line"},{glyph:"face_check",layer:"faceplate",note:"Face → checkmark ✅"}],nonBodyTasks:["External: green scan line top to bottom","Faceplate: morph face → checkmark"]},
+  {id:14,title:"Verification Failed",titleEn:"Verification Failed",color:"#F44336",steps:[{glyph:"hand_extend",layer:"body",note:"Extends document"},{glyph:"obj_document",layer:"external",note:"Document exits frame"},{glyph:"obj_stamp_x",layer:"external",note:"Returns with ❌ stamp"},{glyph:"eyes_track_obj",layer:"face_anim",note:"Examines stamp"},{glyph:"hand_hide",layer:"body",note:"Hides behind back"}],nonBodyTasks:["External: document exits and returns","External: red X stamp on document","Face anim: eye track stamped doc"]},
+  {id:15,title:"Crypto Swap",titleEn:"Crypto Swap",color:"#FF9800",steps:[{glyph:"hand_hold_2",layer:"body",note:"Two hands, two coins"},{glyph:"eyes_track_l",layer:"face_anim",note:"Looking left"},{glyph:"eyes_track_r",layer:"face_anim",note:"Looking right"},{glyph:"hand_juggle",layer:"body",note:"Juggling, swapping"},{glyph:"face_cool",layer:"faceplate",note:"Cool display"}],nonBodyTasks:["Face anim: eye track left → right","Faceplate: transition to cool","External: two different crypto icons"]},
+  {id:16,title:"MoneyGram Transfer",titleEn:"MoneyGram Transfer",color:"#D32F2F",steps:[{glyph:"eyes_visor",layer:"face_anim",note:"Looking into distance"},{glyph:"hand_throw",layer:"body",note:"Throws envelope"},{glyph:"obj_envelope",layer:"external",note:"Envelope flies away"},{glyph:"obj_like",layer:"external",note:"Like returns"},{glyph:"face_wink",layer:"faceplate",note:"Satisfied wink"}],nonBodyTasks:["Face anim: hand visor pose","External: envelope flies off screen","External: like/heart returns","Faceplate: wink"]},
+  {id:17,title:"Payments",titleEn:"Payments",color:"#3F51B5",steps:[{glyph:"body_front",layer:"body",note:"Standing"},{glyph:"obj_scroll",layer:"external",note:"Scroll appears beside"},{glyph:"body_side_r",layer:"body",note:"Turns to scroll"},{glyph:"face_smart",layer:"faceplate",note:"Smart glasses"},{glyph:"eyes_track_obj",layer:"face_anim",note:"Studying scroll"}],nonBodyTasks:["External: pixel scroll appears","Faceplate: change to smart glasses","Face anim: studying the scroll"]},
+];
+
+const LAYER_COLORS = {
+  body:{bg:"#111111",border:"#444444",text:"#CCCCCC",label:"BODY"},
+  faceplate:{bg:"#001515",border:"#00FFFF",text:"#7FFFFF",label:"FACEPLATE"},
+  face_anim:{bg:"#180010",border:"#FF95DA",text:"#FFBBEE",label:"FACE ANIM"},
+  external:{bg:"#0A1A0A",border:"#4AC262",text:"#8BFFA8",label:"EXTERNAL"},
+};
+
+const PRESET_COLORS = ["#00FFFF","#FF95DA","#4AC262","#FFD700","#FF9800","#F7931A","#9C27B0","#F44336","#2196F3","#E91E63","#D32F2F","#3F51B5","#00E5FF","#76FF03","#FF6D00"];
+
+function uid(){return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`}
+function stepKey(sid,i){return `s_${sid}_${i}`}
+function taskKey(sid,i){return `t_${sid}_${i}`}
+function fmtPct(n){return String(Math.round(Math.max(0,Math.min(100,n)))).padStart(3,'0')+'%'}
+function pctColor(pct){
+  if(pct>=100)return '#FFFFFF';
+  if(pct>=90)return '#4AC262';
+  if(pct>=60)return '#FFD700';
+  if(pct>=30)return '#FF9800';
+  return '#00FFFF';
+}
+
+// ── CLOCK ─────────────────────────────────────────────────────────────
+function ClockDisplay(){
+  const [time,setTime]=useState(()=>new Date());
+  useEffect(()=>{const t=setInterval(()=>setTime(new Date()),1000);return()=>clearInterval(t);},[]);
+  const h=String(time.getHours()).padStart(2,'0');
+  const m=String(time.getMinutes()).padStart(2,'0');
+  const s=String(time.getSeconds()).padStart(2,'0');
+  const blink=time.getSeconds()%2===0;
+  return(
+    <div style={{fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:700,color:'#444',letterSpacing:2,userSelect:'none',flexShrink:0}}>
+      {h}<span style={{color:blink?'#444':'#222'}}>:</span>{m}<span style={{color:blink?'#444':'#222'}}>:</span>{s}
+    </div>
+  );
+}
+
+// ── BIG PROGRESS COUNTER ──────────────────────────────────────────────
+function BigProgressCounter({globalPct,personalPct,playerColor,playerName}){
+  const gc=pctColor(globalPct);
+  const is100=globalPct>=100;
+  return(
+    <div style={{background:'#000',borderBottom:'1px solid #111',padding:'8px 24px',display:'flex',alignItems:'center',gap:20,flexShrink:0}}>
+      <div style={{fontFamily:"'Courier New',monospace",fontSize:44,fontWeight:900,color:gc,textShadow:is100?`0 0 40px ${gc}, 0 0 80px ${gc}`:`0 0 20px ${gc}44`,letterSpacing:3,lineHeight:1,minWidth:130,transition:'color 0.6s,text-shadow 0.6s'}}>
+        {fmtPct(globalPct)}
+      </div>
+      <div style={{flex:1,position:'relative',height:6,background:'#0A0A0A',borderRadius:3,overflow:'hidden'}}>
+        <div style={{position:'absolute',top:0,left:0,height:'100%',width:`${personalPct}%`,background:playerColor+'44',borderRadius:3,transition:'width 0.5s ease'}}/>
+        <div style={{position:'absolute',top:0,left:0,height:'100%',width:`${globalPct}%`,background:gc,borderRadius:3,boxShadow:`0 0 8px ${gc}88`,transition:'width 0.5s ease,background 0.6s'}}/>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:2,flexShrink:0}}>
+        <div style={{fontSize:9,color:'#333',letterSpacing:1}}>ALL STEPS</div>
+        <div style={{fontSize:10,color:playerColor,letterSpacing:1,fontWeight:700}}>{playerName||'YOU'}: {fmtPct(personalPct)}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── GLYPH ICON ─────────────────────────────────────────────────────────
+function GlyphIcon({type,size=28}){
+  const s=size,h=s/2;
+  const icons={
+    body_front:<g><rect x={4} y={2} width={s-8} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><rect x={8} y={6} width={s-16} height={s-16} rx={1} fill="none" stroke="currentColor" strokeWidth={1.5}/><line x1={h-3} y1={s-6} x2={h-3} y2={s-2} stroke="currentColor" strokeWidth={1.5}/><line x1={h+3} y1={s-6} x2={h+3} y2={s-2} stroke="currentColor" strokeWidth={1.5}/></g>,
+    body_side_r:<g><rect x={6} y={2} width={s-12} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><line x1={8} y1={h} x2={s-8} y2={h-4} stroke="currentColor" strokeWidth={1.5}/><line x1={h} y1={s-6} x2={h} y2={s-2} stroke="currentColor" strokeWidth={1.5}/></g>,
+    body_side_l:<g><rect x={6} y={2} width={s-12} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><line x1={s-8} y1={h} x2={8} y2={h-4} stroke="currentColor" strokeWidth={1.5}/><line x1={h} y1={s-6} x2={h} y2={s-2} stroke="currentColor" strokeWidth={1.5}/></g>,
+    body_split:<g><rect x={2} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5} strokeDasharray="2 2"/><rect x={s-14} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5} strokeDasharray="2 2"/><line x1={h} y1={6} x2={h} y2={s-6} stroke="currentColor" strokeWidth={1} strokeDasharray="3 3" opacity={0.4}/></g>,
+    body_merge:<g><rect x={2} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5}/><rect x={s-14} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5}/><path d={`M14 ${h} L${s-14} ${h}`} stroke="currentColor" strokeWidth={1.5}/></g>,
+    body_melt:<g><path d={`M6 4 L6 ${s-10} Q${h} ${s} ${s-6} ${s-10} L${s-6} 4 Z`} fill="none" stroke="currentColor" strokeWidth={2}/><circle cx={h-4} cy={12} r={2} fill="currentColor"/><circle cx={h+4} cy={12} r={2} fill="currentColor"/></g>,
+    body_glitch:<g><rect x={4} y={2} width={s-8} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2} strokeDasharray="4 2"/><line x1={2} y1={h} x2={s-2} y2={h} stroke="currentColor" strokeWidth={1} opacity={0.5}/><rect x={6} y={h-2} width={8} height={4} fill="currentColor" opacity={0.3}/><rect x={s-14} y={h+2} width={6} height={3} fill="currentColor" opacity={0.3}/></g>,
+    body_shake:<g><rect x={6} y={4} width={s-12} height={s-8} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><path d={`M3 ${h-4} L1 ${h} L3 ${h+4}`} stroke="currentColor" strokeWidth={1.5} fill="none"/><path d={`M${s-3} ${h-4} L${s-1} ${h} L${s-3} ${h+4}`} stroke="currentColor" strokeWidth={1.5} fill="none"/></g>,
+    body_tense:<g><rect x={4} y={2} width={s-8} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2.5}/><line x1={2} y1={4} x2={6} y2={8} stroke="currentColor" strokeWidth={1.5}/><line x1={s-2} y1={4} x2={s-6} y2={8} stroke="currentColor" strokeWidth={1.5}/><line x1={2} y1={s-4} x2={6} y2={s-8} stroke="currentColor" strokeWidth={1.5}/><line x1={s-2} y1={s-4} x2={s-6} y2={s-8} stroke="currentColor" strokeWidth={1.5}/></g>,
+    body_lean_fwd:<g><rect x={4} y={6} width={s-8} height={s-10} rx={3} fill="none" stroke="currentColor" strokeWidth={2} transform={`rotate(-15 ${h} ${h})`}/></g>,
+  };
+  const icon=icons[type];
+  return(
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} style={{display:"block"}}>
+      {icon||<text x={h} y={h+4} textAnchor="middle" fontSize={9} fill="currentColor" fontFamily="monospace">{(GLYPHS[type]||{}).id||"?"}</text>}
+    </svg>
+  );
+}
+
+// ── STORYBOARD STRIP ──────────────────────────────────────────────────
+function StoryboardStrip({scenario,checked,claimed,onStepClick,onStepDoubleClick,onStepRightClick,playerId,playerColor,playerName,isCustom,onEdit,onDelete,allGlyphs}){
+  const glyphs=allGlyphs||GLYPHS;
+  return(
+    <div style={{background:"#080808",border:"1px solid #1A1A1A",borderLeft:`4px solid ${scenario.color}`,borderRadius:6,padding:"12px 16px",marginBottom:8}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+        <span style={{background:scenario.color,color:"#000",fontWeight:900,fontSize:11,minWidth:26,height:26,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{typeof scenario.id==="string"?"★":scenario.id}</span>
+        <span style={{fontWeight:700,fontSize:13,color:"#FFFFFF"}}>{scenario.title}</span>
+        <span style={{fontSize:11,color:"#FFFFFF",fontStyle:"italic"}}>{scenario.titleEn}</span>
+        {isCustom&&(
+          <div style={{marginLeft:"auto",display:"flex",gap:4}}>
+            <button onClick={()=>onEdit(scenario)} style={{background:"#0A1A2A",border:"1px solid #00FFFF44",borderRadius:3,color:"#00FFFF",padding:"2px 8px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Edit</button>
+            <button onClick={()=>onDelete(scenario.id)} style={{background:"#1A0A0A",border:"1px solid #FF444444",borderRadius:3,color:"#FF4444",padding:"2px 8px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Delete</button>
+          </div>
+        )}
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:4,overflowX:"auto",padding:"8px 0",borderTop:"1px dashed #1A1A1A",borderBottom:"1px dashed #1A1A1A"}}>
+        {scenario.steps.map((step,i)=>{
+          const lc=LAYER_COLORS[step.layer]||LAYER_COLORS.external;
+          const key=stepKey(scenario.id,i);
+          const myDone=!!checked[key]?.[playerId];
+          const claim=claimed[key];
+          const claimedByMe=claim?.id===playerId;
+          const claimedByOther=claim&&!claimedByMe;
+          const g=glyphs[step.glyph];
+          let borderColor=lc.border+'55';
+          if(myDone)borderColor=lc.border;
+          else if(claimedByMe)borderColor=playerColor;
+          else if(claimedByOther)borderColor=claim.color+'88';
+          const title=`${step.note}\n[${lc.label}]${claim?`\nClaimed by ${claim.name}`:'\nClick to claim · Double-click to claim+done · Right-click to release'}`;
+          return(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:2}}>
+              {i>0&&<span style={{color:"#333",fontSize:14,margin:"0 2px"}}>—</span>}
+              <div
+                className="step-card"
+                onClick={()=>onStepClick(key)}
+                onDoubleClick={()=>onStepDoubleClick(key)}
+                onContextMenu={(e)=>onStepRightClick(e,key)}
+                title={title}
+                style={{
+                  background:lc.bg,
+                  border:`1.5px solid ${borderColor}`,
+                  borderRadius:4,
+                  padding:"4px 6px",
+                  display:"flex",
+                  flexDirection:"column",
+                  alignItems:"center",
+                  minWidth:52,
+                  cursor:claimedByOther?"not-allowed":"pointer",
+                  position:"relative",
+                  opacity:myDone?0.55:1,
+                  boxShadow:claimedByMe?`0 0 8px ${playerColor}44`:'none',
+                }}
+              >
+                {myDone&&(
+                  <div style={{position:"absolute",top:2,right:2,width:11,height:11,borderRadius:2,background:playerColor,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <svg width="8" height="8" viewBox="0 0 8 8"><polyline points="1,4 3,6 7,2" stroke="#000" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                )}
+                {!myDone&&claimedByMe&&(
+                  <div className="claim-dot" style={{position:"absolute",top:2,left:2,width:8,height:8,borderRadius:"50%",background:playerColor,boxShadow:`0 0 4px ${playerColor}`}}/>
+                )}
+                {!myDone&&claimedByOther&&(
+                  <div style={{position:"absolute",top:2,left:2,width:14,height:14,borderRadius:2,background:claim.color,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <span style={{fontSize:7,color:"#000",fontWeight:900,lineHeight:1}}>{(claim.name||'?').slice(0,2).toUpperCase()}</span>
+                  </div>
+                )}
+                <div style={{color:myDone?lc.text+'88':lc.text,marginBottom:2,textDecoration:myDone?"line-through":"none"}}>
+                  {g?<span style={{fontSize:16}}>{g.label}</span>:<GlyphIcon type={step.glyph} size={26}/>}
+                </div>
+                <span style={{fontSize:7,color:lc.text,opacity:myDone?0.35:0.7,textTransform:"uppercase",letterSpacing:0.5}}>{lc.label}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{marginTop:6,fontSize:10,color:"#FFFFFF",lineHeight:1.6}}>
+        {scenario.steps.map((s,i)=>{
+          const done=!!checked[stepKey(scenario.id,i)]?.[playerId];
+          return(
+            <span key={i}>
+              {i>0&&<span style={{color:"#333"}}> → </span>}
+              <span style={{color:done?"#444":(s.layer==="body"?"#FFFFFF":LAYER_COLORS[s.layer]?.border)||"#FFFFFF",textDecoration:done?"line-through":"none"}}>{s.note}</span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── SETUP PANEL ────────────────────────────────────────────────────────
+function SetupPanel({playerId,playerName,playerColor,serverHost,onSetName,onSetColor,onSetHost,onDone}){
+  const [nameInput,setNameInput]=useState(playerName||"");
+  const [colorInput,setColorInput]=useState(playerColor||"#00FFFF");
+  const [hostInput,setHostInput]=useState(serverHost||"localhost");
+  const valid=nameInput.trim().length>0;
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100}}>
+      <div style={{background:"#050505",border:`2px solid ${colorInput}`,borderRadius:10,padding:32,width:420,maxWidth:"90vw",boxShadow:`0 0 60px ${colorInput}22`}}>
+        <div style={{fontSize:17,fontWeight:900,color:colorInput,marginBottom:4,letterSpacing:2}}>PLAYER SETUP</div>
+        <div style={{fontSize:10,color:"#888",marginBottom:24,letterSpacing:1}}>WHO ARE YOU?  ·  ID: {playerId.slice(0,16)}…</div>
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:11,color:"#666",marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Your name</div>
+          <input value={nameInput} onChange={e=>setNameInput(e.target.value)} placeholder="Alex, Designer, QA Lead..." autoFocus
+            style={{width:"100%",background:"#0A0A0A",border:"1.5px solid #222",borderRadius:4,color:"#EEE",fontFamily:"inherit",fontSize:14,padding:"10px 12px",outline:"none"}}/>
+        </div>
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11,color:"#666",marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Your color</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+            {PRESET_COLORS.map(c=>(
+              <div key={c} onClick={()=>setColorInput(c)} style={{width:26,height:26,borderRadius:4,background:c,cursor:"pointer",border:colorInput===c?"2.5px solid #FFF":"2px solid transparent",boxShadow:colorInput===c?`0 0 8px ${c}88`:"none",flexShrink:0}}/>
+            ))}
+            <input type="color" value={colorInput} onChange={e=>setColorInput(e.target.value)} style={{width:32,height:26,padding:0,border:"none",background:"none",cursor:"pointer",flexShrink:0}}/>
+          </div>
+        </div>
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:11,color:"#666",marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sync server host</div>
+          <div style={{fontSize:10,color:"#555",marginBottom:8,lineHeight:1.7}}>Run <span style={{color:"#00FFFF"}}>node server.js</span> · others enter your IP</div>
+          <input value={hostInput} onChange={e=>setHostInput(e.target.value)} placeholder="localhost or 192.168.1.X"
+            style={{width:"100%",background:"#0A0A0A",border:"1.5px solid #222",borderRadius:4,color:"#EEE",fontFamily:"inherit",fontSize:13,padding:"9px 10px",outline:"none"}}/>
+        </div>
+        <div style={{fontSize:10,color:"#444",marginBottom:16}}>No server? Works offline — state saved locally only.</div>
+        {nameInput.trim()&&(
+          <div style={{marginBottom:16,display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:"#0A0A0A",borderRadius:6,border:`1px solid ${colorInput}33`}}>
+            <div style={{width:36,height:36,borderRadius:6,background:colorInput,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:14,color:"#000",flexShrink:0}}>
+              {nameInput.trim().slice(0,2).toUpperCase()}
+            </div>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:"#FFF"}}>{nameInput.trim()}</div>
+              <div style={{fontSize:10,color:"#555",marginTop:2}}>Ready to collaborate</div>
+            </div>
+          </div>
+        )}
+        <button onClick={()=>{if(!valid)return;onSetName(nameInput.trim());onSetColor(colorInput);onSetHost(hostInput);onDone();}}
+          style={{width:"100%",padding:"13px 0",background:valid?colorInput:"#1A1A1A",color:valid?"#000":"#444",border:"none",borderRadius:6,fontSize:14,fontWeight:900,cursor:valid?"pointer":"default",fontFamily:"inherit",letterSpacing:2}}>
+          {valid?"START SESSION":"ENTER YOUR NAME FIRST"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── PROGRESS BAR (small) ──────────────────────────────────────────────
+function ProgressBar({done,total,color,label}){
+  const pct=total===0?0:Math.round((done/total)*100);
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:8,minWidth:120}}>
+      <span style={{fontSize:11,color,fontWeight:700,minWidth:22}}>{label}</span>
+      <div style={{flex:1,height:4,background:"#111",borderRadius:3,overflow:"hidden",minWidth:60}}>
+        <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3,transition:"width 0.3s ease",boxShadow:`0 0 6px ${color}88`}}/>
+      </div>
+      <span style={{fontSize:10,color:"#555",minWidth:34}}>{done}/{total}</span>
+    </div>
+  );
+}
+
+// ── TOOLBAR COMPONENTS ────────────────────────────────────────────────
+function TBSep(){return <div style={{width:1,background:"#222",margin:"0 3px",alignSelf:"stretch"}}/>;}
+function TBBtn({onClick,title,children,mono}){
+  return(
+    <button className="tbtn" onMouseDown={e=>{e.preventDefault();onClick();}} title={title}
+      style={{fontWeight:mono?700:400,fontStyle:title==="Italic"?"italic":"normal",textDecoration:title==="Underline"?"underline":title==="Strike"?"line-through":"none"}}>
+      {children}
+    </button>
+  );
+}
+
+// ── RICH TEXT EDITOR ──────────────────────────────────────────────────
+function RichTextEditor({noteId,value,onChange}){
+  const editorRef=useRef(null);
+  const prevIdRef=useRef(null);
+  useEffect(()=>{
+    if(noteId!==prevIdRef.current&&editorRef.current){
+      prevIdRef.current=noteId;
+      editorRef.current.innerHTML=value||"";
+    }
+  },[noteId,value]);
+  const exec=(cmd,val=null)=>{editorRef.current?.focus();document.execCommand(cmd,false,val);};
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",minHeight:0}}>
+      <div style={{display:"flex",gap:2,flexWrap:"wrap",padding:"5px 8px",background:"#080808",borderBottom:"1px solid #1A1A1A",flexShrink:0,alignItems:"center"}}>
+        <TBBtn onClick={()=>exec("bold")} title="Bold" mono>B</TBBtn>
+        <TBBtn onClick={()=>exec("italic")} title="Italic">I</TBBtn>
+        <TBBtn onClick={()=>exec("underline")} title="Underline">U</TBBtn>
+        <TBBtn onClick={()=>exec("strikeThrough")} title="Strike">S</TBBtn>
+        <TBSep/>
+        <TBBtn onClick={()=>exec("formatBlock","h1")} title="H1">H1</TBBtn>
+        <TBBtn onClick={()=>exec("formatBlock","h2")} title="H2">H2</TBBtn>
+        <TBBtn onClick={()=>exec("formatBlock","p")} title="Paragraph">¶</TBBtn>
+        <TBSep/>
+        <TBBtn onClick={()=>exec("insertUnorderedList")} title="Bullet">• List</TBBtn>
+        <TBBtn onClick={()=>exec("insertOrderedList")} title="Numbered">1. List</TBBtn>
+        <TBSep/>
+        <TBBtn onClick={()=>exec("formatBlock","blockquote")} title="Quote">❝</TBBtn>
+        <TBBtn onClick={()=>exec("formatBlock","pre")} title="Code">{"</>"}</TBBtn>
+        <TBSep/>
+        <TBBtn onClick={()=>exec("removeFormat")} title="Clear">✕</TBBtn>
+      </div>
+      <div ref={editorRef} contentEditable suppressContentEditableWarning className="note-editor"
+        data-placeholder="Start typing… use toolbar for formatting"
+        onInput={()=>onChange&&onChange(editorRef.current.innerHTML)}
+        style={{flex:1,padding:"20px 24px",background:"#030303",outline:"none",overflowY:"auto",lineHeight:1.75,fontSize:14,color:"#DDD",minHeight:0}}/>
+    </div>
+  );
+}
+
+// ── ADD/EDIT SCENARIO MODAL ────────────────────────────────────────────
+function AddScenarioModal({editing,allGlyphs,onSave,onClose}){
+  const isEdit=!!editing;
+  const [title,setTitle]=useState(editing?.title||"");
+  const [titleEn,setTitleEn]=useState(editing?.titleEn||"");
+  const [color,setColor]=useState(editing?.color||"#00FFFF");
+  const [steps,setSteps]=useState(editing?.steps?editing.steps.map(s=>({...s})):[]);
+  const [tasks,setTasks]=useState(editing?.nonBodyTasks?[...editing.nonBodyTasks]:[]);
+  const [newTask,setNewTask]=useState("");
+  const glyphKeys=Object.keys(allGlyphs);
+  const addStep=()=>setSteps(p=>[...p,{glyph:glyphKeys[0]||"body_front",layer:"body",note:""}]);
+  const removeStep=i=>setSteps(p=>p.filter((_,j)=>j!==i));
+  const updateStep=(i,field,val)=>setSteps(p=>p.map((s,j)=>j===i?{...s,[field]:val}:s));
+  const addTask=()=>{if(newTask.trim()){setTasks(p=>[...p,newTask.trim()]);setNewTask("");}};
+  const removeTask=i=>setTasks(p=>p.filter((_,j)=>j!==i));
+  const inp={width:"100%",background:"#0A0A0A",border:"1.5px solid #222",borderRadius:4,color:"#EEE",fontFamily:"inherit",fontSize:13,padding:"8px 10px",outline:"none"};
+  const lbl={fontSize:10,color:"#666",marginBottom:6,textTransform:"uppercase",letterSpacing:1};
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,overflowY:"auto",padding:"24px 16px"}}>
+      <div style={{background:"#060606",border:"2px solid #FF95DA",borderRadius:10,padding:28,width:"100%",maxWidth:620,boxShadow:"0 0 40px #FF95DA11",marginBottom:24}}>
+        <div style={{fontSize:14,fontWeight:900,color:"#FF95DA",marginBottom:22,letterSpacing:2}}>{isEdit?"EDIT SCENARIO":"ADD SCENARIO"}</div>
+        <div style={{marginBottom:14}}><div style={lbl}>Title</div><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Scenario name" style={inp}/></div>
+        <div style={{marginBottom:14}}><div style={lbl}>Title (English / short)</div><input value={titleEn} onChange={e=>setTitleEn(e.target.value)} placeholder="English label" style={inp}/></div>
+        <div style={{marginBottom:18}}>
+          <div style={lbl}>Accent color</div>
+          <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+            {PRESET_COLORS.map(c=>(
+              <div key={c} onClick={()=>setColor(c)} style={{width:22,height:22,borderRadius:4,background:c,cursor:"pointer",border:color===c?"2.5px solid #FFF":"2px solid transparent",flexShrink:0}}/>
+            ))}
+            <input type="color" value={color} onChange={e=>setColor(e.target.value)} style={{width:28,height:22,padding:0,border:"none",background:"none",cursor:"pointer",flexShrink:0}}/>
+          </div>
+        </div>
+        <div style={{marginBottom:18}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <div style={lbl}>Steps ({steps.length})</div>
+            <button onClick={addStep} style={{background:"#FF95DA11",border:"1px solid #FF95DA55",borderRadius:4,color:"#FF95DA",padding:"3px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>+ Step</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:230,overflowY:"auto"}}>
+            {steps.map((step,i)=>(
+              <div key={i} style={{display:"flex",gap:5,alignItems:"center",background:"#0A0A0A",padding:"5px 8px",borderRadius:4,border:"1px solid #181818"}}>
+                <span style={{fontSize:10,color:"#333",minWidth:16,textAlign:"center"}}>{i+1}</span>
+                <select value={step.glyph} onChange={e=>updateStep(i,"glyph",e.target.value)}
+                  style={{background:"#111",border:"1px solid #222",color:"#EEE",padding:"3px 4px",borderRadius:3,fontFamily:"inherit",fontSize:11,flex:"0 0 140px"}}>
+                  {glyphKeys.map(k=><option key={k} value={k}>{(allGlyphs[k]?.label||k).slice(0,8)} · {k}</option>)}
+                </select>
+                <select value={step.layer} onChange={e=>updateStep(i,"layer",e.target.value)}
+                  style={{background:"#111",border:"1px solid #222",color:"#EEE",padding:"3px 4px",borderRadius:3,fontFamily:"inherit",fontSize:11,flex:"0 0 90px"}}>
+                  {["body","faceplate","face_anim","external"].map(l=><option key={l} value={l}>{l}</option>)}
+                </select>
+                <input value={step.note} onChange={e=>updateStep(i,"note",e.target.value)} placeholder="note…"
+                  style={{background:"#111",border:"1px solid #222",color:"#EEE",padding:"3px 6px",borderRadius:3,fontFamily:"inherit",fontSize:11,flex:1,outline:"none"}}/>
+                <button onClick={()=>removeStep(i)} style={{background:"none",border:"none",color:"#F44336",cursor:"pointer",fontSize:16,padding:"0 2px",lineHeight:1}}>×</button>
+              </div>
+            ))}
+            {steps.length===0&&<div style={{fontSize:11,color:"#2A2A2A",padding:"10px 8px"}}>No steps — click + Step to add</div>}
+          </div>
+        </div>
+        <div style={{marginBottom:22}}>
+          <div style={lbl}>Task notes (non-body layers)</div>
+          <div style={{display:"flex",gap:6,marginBottom:6}}>
+            <input value={newTask} onChange={e=>setNewTask(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addTask()} placeholder="Faceplate: …"
+              style={{flex:1,background:"#0A0A0A",border:"1.5px solid #222",borderRadius:4,color:"#EEE",fontFamily:"inherit",fontSize:12,padding:"6px 10px",outline:"none"}}/>
+            <button onClick={addTask} style={{background:"#00FFFF11",border:"1px solid #00FFFF44",borderRadius:4,color:"#00FFFF",padding:"6px 12px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Add</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}>
+            {tasks.map((t,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"#0A0A0A",padding:"5px 10px",borderRadius:3}}>
+                <span style={{flex:1,fontSize:12,color:"#CCC"}}>{t}</span>
+                <button onClick={()=>removeTask(i)} style={{background:"none",border:"none",color:"#F44336",cursor:"pointer",fontSize:14,padding:0,lineHeight:1}}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={onClose} style={{flex:1,padding:"11px 0",background:"transparent",border:"1.5px solid #222",borderRadius:6,color:"#555",cursor:"pointer",fontFamily:"inherit",fontSize:12,fontWeight:700,letterSpacing:1}}>CANCEL</button>
+          <button onClick={()=>title.trim()&&onSave({title:title.trim(),titleEn:titleEn.trim(),color,steps,nonBodyTasks:tasks})}
+            style={{flex:2,padding:"11px 0",background:title.trim()?"#FF95DA":"#1A1A1A",border:"none",borderRadius:6,color:title.trim()?"#000":"#444",cursor:title.trim()?"pointer":"default",fontFamily:"inherit",fontSize:13,fontWeight:900,letterSpacing:2}}>
+            {isEdit?"SAVE CHANGES":"CREATE SCENARIO"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ADD/EDIT GLYPH MODAL ───────────────────────────────────────────────
+function AddGlyphModal({editing,onSave,onClose}){
+  const isEdit=!!editing;
+  const [label,setLabel]=useState(editing?.label||"");
+  const [desc,setDesc]=useState(editing?.desc||"");
+  const [keyVal,setKeyVal]=useState(editing?.key||"");
+  const [idVal,setIdVal]=useState(editing?.id||"");
+  const autoKey=label.toLowerCase().replace(/[^a-z0-9]/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"")||"custom";
+  const effectiveKey=isEdit?editing.key:(keyVal.trim()||autoKey);
+  const inp={width:"100%",background:"#0A0A0A",border:"1.5px solid #222",borderRadius:4,color:"#EEE",fontFamily:"inherit",fontSize:13,padding:"8px 10px",outline:"none"};
+  const lbl={fontSize:10,color:"#666",marginBottom:6,textTransform:"uppercase",letterSpacing:1};
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16}}>
+      <div style={{background:"#060606",border:"2px solid #4AC262",borderRadius:10,padding:28,width:"100%",maxWidth:400,boxShadow:"0 0 40px #4AC26211"}}>
+        <div style={{fontSize:14,fontWeight:900,color:"#4AC262",marginBottom:22,letterSpacing:2}}>{isEdit?"EDIT GLYPH":"ADD GLYPH"}</div>
+        <div style={{marginBottom:14}}><div style={lbl}>Label (emoji or text)</div><input value={label} onChange={e=>setLabel(e.target.value)} placeholder="💡 or short text" style={inp} autoFocus/></div>
+        <div style={{marginBottom:14}}><div style={lbl}>Description</div><input value={desc} onChange={e=>setDesc(e.target.value)} placeholder="What does this glyph represent?" style={inp}/></div>
+        {!isEdit&&(
+          <div style={{marginBottom:14}}>
+            <div style={lbl}>Key — auto: <span style={{color:"#4AC262"}}>{autoKey}</span></div>
+            <input value={keyVal} onChange={e=>setKeyVal(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g,""))} placeholder={autoKey} style={inp}/>
+          </div>
+        )}
+        <div style={{marginBottom:20}}><div style={lbl}>Short ID (optional)</div><input value={idVal} onChange={e=>setIdVal(e.target.value.slice(0,6))} placeholder={label.slice(0,4).toUpperCase()||"ID"} style={inp}/></div>
+        {label&&(
+          <div style={{marginBottom:20,padding:"12px 16px",background:"#0A0A0A",borderRadius:6,border:"1px solid #1A1A1A",display:"flex",alignItems:"center",gap:12}}>
+            <span style={{fontSize:28}}>{label}</span>
+            <div>
+              <div style={{fontSize:12,color:"#EEE"}}>{desc||"No description"}</div>
+              <div style={{fontSize:10,color:"#555",marginTop:2}}>key: <span style={{color:"#4AC262"}}>{effectiveKey}</span></div>
+            </div>
+          </div>
+        )}
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={onClose} style={{flex:1,padding:"11px 0",background:"transparent",border:"1.5px solid #222",borderRadius:6,color:"#555",cursor:"pointer",fontFamily:"inherit",fontSize:12,fontWeight:700,letterSpacing:1}}>CANCEL</button>
+          <button onClick={()=>label.trim()&&onSave({key:effectiveKey,id:idVal.trim()||label.slice(0,4).toUpperCase(),label:label.trim(),desc:desc.trim()})}
+            style={{flex:2,padding:"11px 0",background:label.trim()?"#4AC262":"#1A1A1A",border:"none",borderRadius:6,color:label.trim()?"#000":"#444",cursor:label.trim()?"pointer":"default",fontFamily:"inherit",fontSize:13,fontWeight:900,letterSpacing:2}}>
+            {isEdit?"SAVE CHANGES":"CREATE GLYPH"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── VERSION HISTORY PANEL ─────────────────────────────────────────────
+function VersionHistoryPanel({versions,onRestore,onSaveManual,onDelete}){
+  const [labelInput,setLabelInput]=useState("");
+  const [confirmId,setConfirmId]=useState(null);
+  const sorted=[...versions].sort((a,b)=>b.at-a.at);
+  return(
+    <div style={{padding:"16px 24px",maxWidth:780,margin:"0 auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
+        <div style={{fontSize:12,color:"#555",letterSpacing:1}}>Auto-saves every 30s · Manual milestones kept forever</div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <input value={labelInput} onChange={e=>setLabelInput(e.target.value)} placeholder="Milestone label…"
+            style={{background:"#0A0A0A",border:"1.5px solid #222",borderRadius:4,color:"#EEE",fontFamily:"inherit",fontSize:12,padding:"6px 12px",outline:"none",width:200}}/>
+          <button onClick={()=>{onSaveManual(labelInput||undefined);setLabelInput("");}}
+            style={{background:"#4AC26211",border:"1.5px solid #4AC26255",borderRadius:5,color:"#4AC262",padding:"7px 16px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",letterSpacing:1}}>
+            SAVE MILESTONE
+          </button>
+        </div>
+      </div>
+      {sorted.length===0&&(
+        <div style={{padding:"40px 24px",textAlign:"center",color:"#2A2A2A",fontSize:13}}>No saved versions yet. Auto-saves appear after 30s of activity.</div>
+      )}
+      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+        {sorted.map(v=>(
+          <div key={v.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 16px",background:"#080808",border:`1px solid ${v.auto?"#1A1A1A":"#4AC26233"}`,borderRadius:5,borderLeft:`3px solid ${v.auto?"#333":"#4AC262"}`}}>
+            <div style={{fontSize:9,color:v.auto?"#333":"#4AC262",fontWeight:700,letterSpacing:1,minWidth:50}}>{v.auto?"AUTO":"MANUAL"}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:12,color:v.auto?"#888":"#FFF",fontWeight:v.auto?400:700}}>{v.label}</div>
+              <div style={{fontSize:10,color:"#444",marginTop:2}}>{new Date(v.at).toLocaleString()}</div>
+            </div>
+            <div style={{display:"flex",gap:6}}>
+              {confirmId===v.id?(
+                <>
+                  <button onClick={()=>{onRestore(v);setConfirmId(null);}} style={{background:"#4AC26222",border:"1px solid #4AC262",borderRadius:4,color:"#4AC262",padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>CONFIRM RESTORE</button>
+                  <button onClick={()=>setConfirmId(null)} style={{background:"none",border:"1px solid #333",borderRadius:4,color:"#555",padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+                </>
+              ):(
+                <>
+                  <button onClick={()=>setConfirmId(v.id)} style={{background:"#00FFFF11",border:"1px solid #00FFFF33",borderRadius:4,color:"#00FFFF",padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Restore</button>
+                  <button onClick={()=>onDelete(v.id)} style={{background:"none",border:"1px solid #F4433633",borderRadius:4,color:"#F44336",padding:"4px 8px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>×</button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ───────────────────────────────────────────────────────────
+function App(){
+  // ── Player identity ──
+  const [playerId] = useState(()=>{
+    let id=localStorage.getItem("sb_pid");
+    if(!id){id=`p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;localStorage.setItem("sb_pid",id);}
+    return id;
+  });
+  const [playerName,setPlayerName]=useState(()=>localStorage.getItem("sb_pname")||"");
+  const [playerColor,setPlayerColor]=useState(()=>localStorage.getItem("sb_pcolor")||"#00FFFF");
+  const [serverHost,setServerHost]=useState(()=>localStorage.getItem("sb_host")||"localhost");
+
+  // ── Synced state ──
+  const [checked,setChecked]=useState(()=>{try{return JSON.parse(localStorage.getItem("sb_checked")||"{}");}catch{return{};}});
+  const [claimed,setClaimed]=useState(()=>{try{return JSON.parse(localStorage.getItem("sb_claimed")||"{}");}catch{return{};}});
+  const [players,setPlayers]=useState(()=>{try{return JSON.parse(localStorage.getItem("sb_players")||"{}");}catch{return{};}});
+  const [customScenarios,setCustomScenarios]=useState(()=>{try{return JSON.parse(localStorage.getItem("sb_custom_scenarios")||"[]");}catch{return[];}});
+  const [customGlyphs,setCustomGlyphs]=useState(()=>{try{return JSON.parse(localStorage.getItem("sb_custom_glyphs")||"{}");}catch{return{};}});
+  const [notes,setNotes]=useState(()=>{try{return JSON.parse(localStorage.getItem("sb_notes")||"[]");}catch{return[];}});
+
+  // ── Local state ──
+  const [versions,setVersions]=useState(()=>{try{return JSON.parse(localStorage.getItem("sb_versions")||"[]");}catch{return[];}});
+  const [activity,setActivity]=useState([]);
+  const [connStatus,setConnStatus]=useState("offline");
+  const [showSetup,setShowSetup]=useState(!localStorage.getItem("sb_pname"));
+  const [celebrationDismissed,setCelebrationDismissed]=useState(false);
+  const [activeTab,setActiveTab]=useState("strips");
+  const [filterLayer,setFilterLayer]=useState("all");
+  const [showAddScenario,setShowAddScenario]=useState(false);
+  const [editScenario,setEditScenario]=useState(null);
+  const [showAddGlyph,setShowAddGlyph]=useState(false);
+  const [editGlyph,setEditGlyph]=useState(null);
+  const [activeNoteId,setActiveNoteId]=useState(null);
+  const [importNotif,setImportNotif]=useState("");
+
+  // ── Refs for sync ──
+  const checkedRef=useRef(checked);
+  const claimedRef=useRef(claimed);
+  const playersRef=useRef(players);
+  const notesRef=useRef(notes);
+  const customScenariosRef=useRef(customScenarios);
+  const customGlyphsRef=useRef(customGlyphs);
+  const esRef=useRef(null);
+  const lastSyncRef=useRef(null);
+  const noteDebounceRef=useRef(null);
+  const importRef=useRef(null);
+  const autoSaveTimerRef=useRef(null);
+
+  useEffect(()=>{checkedRef.current=checked;},[checked]);
+  useEffect(()=>{claimedRef.current=claimed;},[claimed]);
+  useEffect(()=>{playersRef.current=players;},[players]);
+  useEffect(()=>{notesRef.current=notes;},[notes]);
+  useEffect(()=>{customScenariosRef.current=customScenarios;},[customScenarios]);
+  useEffect(()=>{customGlyphsRef.current=customGlyphs;},[customGlyphs]);
+
+  // ── Persist to localStorage ──
+  useEffect(()=>{localStorage.setItem("sb_pname",playerName);},[playerName]);
+  useEffect(()=>{localStorage.setItem("sb_pcolor",playerColor);},[playerColor]);
+  useEffect(()=>{localStorage.setItem("sb_host",serverHost);},[serverHost]);
+  useEffect(()=>{localStorage.setItem("sb_checked",JSON.stringify(checked));},[checked]);
+  useEffect(()=>{localStorage.setItem("sb_claimed",JSON.stringify(claimed));},[claimed]);
+  useEffect(()=>{localStorage.setItem("sb_players",JSON.stringify(players));},[players]);
+  useEffect(()=>{localStorage.setItem("sb_custom_scenarios",JSON.stringify(customScenarios));},[customScenarios]);
+  useEffect(()=>{localStorage.setItem("sb_custom_glyphs",JSON.stringify(customGlyphs));},[customGlyphs]);
+  useEffect(()=>{localStorage.setItem("sb_notes",JSON.stringify(notes));},[notes]);
+
+  const syncUrl=`http://${serverHost}:3001`;
+
+  const pushAll=useCallback(async(overrides={})=>{
+    try{
+      setConnStatus("syncing");
+      const payload={
+        checked:checkedRef.current,
+        claimed:claimedRef.current,
+        players:playersRef.current,
+        notes:notesRef.current,
+        customScenarios:customScenariosRef.current,
+        customGlyphs:customGlyphsRef.current,
+        ...overrides,
+      };
+      await fetch(`${syncUrl}/state`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      setConnStatus("ok");
+    }catch{setConnStatus("error");}
+  },[syncUrl]);
+
+  const pullState=useCallback(async()=>{
+    try{
+      const res=await fetch(`${syncUrl}/state`);
+      if(!res.ok)throw new Error();
+      const data=await res.json();
+      const snap=JSON.stringify(data.checked);
+      if(snap!==lastSyncRef.current){lastSyncRef.current=snap;setChecked(data.checked||{});}
+      if(data.claimed)setClaimed(data.claimed);
+      if(data.players)setPlayers(data.players);
+      if(data.notes)setNotes(data.notes);
+      if(data.customScenarios)setCustomScenarios(data.customScenarios);
+      if(data.customGlyphs)setCustomGlyphs(data.customGlyphs);
+      setConnStatus("ok");
+    }catch{setConnStatus("error");}
+  },[syncUrl]);
+
+  // ── SSE connection ──
+  useEffect(()=>{
+    if(showSetup)return;
+    pullState();
+    if(esRef.current){esRef.current.close();esRef.current=null;}
+    const es=new EventSource(`${syncUrl}/events`);
+    esRef.current=es;
+    es.onopen=()=>setConnStatus("ok");
+    es.onmessage=(e)=>{
+      try{
+        const data=JSON.parse(e.data);
+        const snap=JSON.stringify(data.checked);
+        if(snap!==lastSyncRef.current){lastSyncRef.current=snap;setChecked(data.checked||{});}
+        if(data.claimed)setClaimed(data.claimed);
+        if(data.players)setPlayers(data.players);
+        if(data.notes)setNotes(data.notes);
+        if(data.customScenarios)setCustomScenarios(data.customScenarios);
+        if(data.customGlyphs)setCustomGlyphs(data.customGlyphs);
+        setConnStatus("ok");
+      }catch{}
+    };
+    es.onerror=()=>setConnStatus("error");
+    return()=>{es.close();esRef.current=null;};
+  },[showSetup,syncUrl]);
+
+  // ── Player heartbeat ──
+  useEffect(()=>{
+    if(!playerName||showSetup)return;
+    const beat=()=>{
+      setPlayers(prev=>{
+        const updated={...prev,[playerId]:{name:playerName,color:playerColor,lastSeen:Date.now()}};
+        playersRef.current=updated;
+        pushAll({players:updated});
+        return updated;
+      });
+    };
+    beat();
+    const interval=setInterval(beat,30000);
+    return()=>clearInterval(interval);
+  },[playerName,playerColor,playerId,showSetup,pushAll]);
+
+  // ── Auto-save ──
+  useEffect(()=>{
+    if(showSetup)return;
+    if(autoSaveTimerRef.current)clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current=setTimeout(()=>{
+      const snap={id:uid(),label:`Auto ${new Date().toLocaleString()}`,at:Date.now(),auto:true,state:{checked:checkedRef.current,claimed:claimedRef.current,customScenarios:customScenariosRef.current,customGlyphs:customGlyphsRef.current,notes:notesRef.current}};
+      setVersions(prev=>{
+        const autos=prev.filter(v=>v.auto).slice(-9);
+        const manuals=prev.filter(v=>!v.auto);
+        const updated=[...manuals,...autos,snap];
+        localStorage.setItem("sb_versions",JSON.stringify(updated));
+        return updated;
+      });
+    },30000);
+    return()=>clearTimeout(autoSaveTimerRef.current);
+  },[checked,claimed,customScenarios,customGlyphs,notes,showSetup]);
+
+  // ── Merged data ──
+  const allGlyphs={...GLYPHS,...customGlyphs};
+  const allScenarios=[...SCENARIOS,...customScenarios];
+
+  // ── Progress computation ──
+  const allStepsList=allScenarios.flatMap(s=>s.steps.map((_,i)=>({key:stepKey(s.id,i)})));
+  const totalSteps=allStepsList.length;
+  const globalDone=allStepsList.filter(({key})=>Object.values(checked[key]||{}).some(Boolean)).length;
+  const personalDone=allStepsList.filter(({key})=>!!checked[key]?.[playerId]).length;
+  const globalPct=totalSteps===0?0:(globalDone/totalSteps)*100;
+  const personalPct=totalSteps===0?0:(personalDone/totalSteps)*100;
+
+  // ── Task list computation ──
+  const allTasks=allScenarios.flatMap(s=>
+    (s.nonBodyTasks||[]).map((task,i)=>({
+      scenario:s.title,scenarioId:s.id,color:s.color,task,
+      key:taskKey(s.id,i),
+      layer:task.startsWith("Faceplate")?"faceplate":task.startsWith("Face anim")?"face_anim":"external",
+    }))
+  );
+  const filtered=filterLayer==="all"?allTasks:allTasks.filter(t=>t.layer===filterLayer);
+  const total=allTasks.length;
+  const counts={faceplate:allTasks.filter(t=>t.layer==="faceplate").length,face_anim:allTasks.filter(t=>t.layer==="face_anim").length,external:allTasks.filter(t=>t.layer==="external").length};
+  const myTasksDone=allTasks.filter(t=>checked[t.key]?.[playerId]).length;
+
+  // ── Glyph progress ──
+  function getGlyphProgress(glyphKey){
+    let done=0;
+    const total2=allScenarios.reduce((n,s)=>n+s.steps.filter(st=>st.glyph===glyphKey).length,0);
+    allScenarios.forEach(s=>s.steps.forEach((step,i)=>{if(step.glyph===glyphKey&&checked[stepKey(s.id,i)]?.[playerId])done++;}));
+    return{done,total:total2};
+  }
+
+  // ── Activity feed ──
+  function addActivity(msg,name,color){
+    setActivity(prev=>[...prev.slice(-19),{msg,playerName:name,playerColor:color,at:Date.now()}]);
+  }
+
+  // ── Step claiming/completing ──
+  function claimStep(key){
+    if(claimedRef.current[key])return;
+    setClaimed(prev=>{
+      const newClaim={id:playerId,name:playerName,color:playerColor,at:Date.now()};
+      const updated={...prev,[key]:newClaim};
+      claimedRef.current=updated;
+      pushAll({claimed:updated});
+      return updated;
+    });
+    addActivity("claimed a step",playerName,playerColor);
+  }
+
+  function releaseStep(key){
+    setClaimed(prev=>{
+      if(prev[key]?.id!==playerId)return prev;
+      const updated={...prev};
+      delete updated[key];
+      claimedRef.current=updated;
+      pushAll({claimed:updated});
+      return updated;
+    });
+    addActivity("released a claim",playerName,playerColor);
+  }
+
+  function completeStep(key){
+    setChecked(prev=>{
+      const entry=prev[key]||{};
+      const nowDone=!entry[playerId];
+      const updated={...prev,[key]:{...entry,[playerId]:nowDone}};
+      checkedRef.current=updated;
+      pushAll({checked:updated});
+      return updated;
+    });
+    setClaimed(prev=>{
+      if(prev[key]?.id!==playerId)return prev;
+      const updated={...prev};
+      delete updated[key];
+      claimedRef.current=updated;
+      return updated;
+    });
+    addActivity("completed a step",playerName,playerColor);
+  }
+
+  function handleStepClick(key){
+    const claim=claimedRef.current[key];
+    if(claim&&claim.id!==playerId)return;
+    if(!claim){claimStep(key);}
+    else{completeStep(key);}
+  }
+
+  function handleStepDoubleClick(key){
+    const claim=claimedRef.current[key];
+    if(claim&&claim.id!==playerId)return;
+    if(!claim){
+      const newClaim={id:playerId,name:playerName,color:playerColor,at:Date.now()};
+      claimedRef.current={...claimedRef.current,[key]:newClaim};
+      setClaimed(prev=>({...prev,[key]:newClaim}));
+    }
+    completeStep(key);
+    addActivity("quick-completed a step",playerName,playerColor);
+  }
+
+  function handleStepRightClick(e,key){
+    e.preventDefault();
+    releaseStep(key);
+  }
+
+  function toggleTask(key){
+    setChecked(prev=>{
+      const entry=prev[key]||{};
+      const updated={...prev,[key]:{...entry,[playerId]:!entry[playerId]}};
+      checkedRef.current=updated;
+      pushAll({checked:updated});
+      return updated;
+    });
+  }
+
+  // ── Notes ──
+  const activeNote=notes.find(n=>n.id===activeNoteId)||null;
+  function addNote(){
+    const n={id:uid(),title:"Untitled Note",content:"",createdAt:Date.now(),updatedAt:Date.now()};
+    setNotes(prev=>{const updated=[...prev,n];pushAll({notes:updated});return updated;});
+    setActiveNoteId(n.id);
+  }
+  function deleteNote(id){
+    setNotes(prev=>{const updated=prev.filter(n=>n.id!==id);pushAll({notes:updated});return updated;});
+    if(activeNoteId===id)setActiveNoteId(null);
+  }
+  function updateNote(noteId,field,value){
+    setNotes(prev=>{
+      const updated=prev.map(n=>n.id===noteId?{...n,[field]:value,updatedAt:Date.now()}:n);
+      if(noteDebounceRef.current)clearTimeout(noteDebounceRef.current);
+      noteDebounceRef.current=setTimeout(()=>pushAll({notes:notesRef.current}),1500);
+      return updated;
+    });
+  }
+
+  // ── Custom scenarios ──
+  function saveScenario(data){
+    if(editScenario){
+      setCustomScenarios(prev=>{const updated=prev.map(s=>s.id===editScenario.id?{...s,...data}:s);pushAll({customScenarios:updated});return updated;});
+      setEditScenario(null);
+    }else{
+      const newS={...data,id:uid()};
+      setCustomScenarios(prev=>{const updated=[...prev,newS];pushAll({customScenarios:updated});return updated;});
+      setShowAddScenario(false);
+    }
+  }
+  function deleteScenario(id){
+    setCustomScenarios(prev=>{const updated=prev.filter(s=>s.id!==id);pushAll({customScenarios:updated});return updated;});
+  }
+
+  // ── Custom glyphs ──
+  function saveGlyph(data){
+    const updated={...customGlyphsRef.current,[data.key]:{id:data.id,label:data.label,desc:data.desc}};
+    setCustomGlyphs(updated);pushAll({customGlyphs:updated});
+    setShowAddGlyph(false);setEditGlyph(null);
+  }
+  function deleteGlyph(key){
+    const updated={...customGlyphsRef.current};delete updated[key];
+    setCustomGlyphs(updated);pushAll({customGlyphs:updated});
+  }
+
+  // ── Versions ──
+  function saveManualVersion(label){
+    const snap={id:uid(),label:label||`Milestone ${new Date().toLocaleString()}`,at:Date.now(),auto:false,state:{checked:checkedRef.current,claimed:claimedRef.current,customScenarios:customScenariosRef.current,customGlyphs:customGlyphsRef.current,notes:notesRef.current}};
+    setVersions(prev=>{const updated=[...prev,snap];localStorage.setItem("sb_versions",JSON.stringify(updated));return updated;});
+  }
+  function restoreVersion(v){
+    setChecked(v.state.checked||{});
+    setClaimed(v.state.claimed||{});
+    setCustomScenarios(v.state.customScenarios||[]);
+    setCustomGlyphs(v.state.customGlyphs||{});
+    setNotes(v.state.notes||[]);
+    pushAll({checked:v.state.checked||{},claimed:v.state.claimed||{},customScenarios:v.state.customScenarios||[],customGlyphs:v.state.customGlyphs||{},notes:v.state.notes||[]});
+  }
+  function deleteVersion(id){
+    setVersions(prev=>{const updated=prev.filter(v=>v.id!==id);localStorage.setItem("sb_versions",JSON.stringify(updated));return updated;});
+  }
+
+  // ── Export/Import ──
+  function exportState(){
+    const snapshot={version:"2.0",exportedAt:new Date().toISOString(),exportedBy:playerName,checked,claimed,customScenarios,customGlyphs,notes};
+    const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`sb-state-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  }
+  function handleImport(e){
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        let nc=JSON.parse(JSON.stringify(checkedRef.current));
+        if(data.checked){Object.keys(data.checked).forEach(k=>{if(!nc[k])nc[k]={};Object.assign(nc[k],data.checked[k]);});setChecked(nc);}
+        let nn=[...notesRef.current];
+        if(data.notes&&data.notes.length){const byId={};nn.forEach(n=>byId[n.id]=n);data.notes.forEach(n=>{if(!byId[n.id]||(n.updatedAt||0)>(byId[n.id].updatedAt||0))byId[n.id]=n;});nn=Object.values(byId).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));setNotes(nn);}
+        if(data.claimed)setClaimed(data.claimed);
+        if(data.customScenarios)setCustomScenarios(data.customScenarios);
+        if(data.customGlyphs)setCustomGlyphs(data.customGlyphs);
+        pushAll({checked:nc,notes:nn,claimed:data.claimed||claimedRef.current,customScenarios:data.customScenarios||customScenariosRef.current,customGlyphs:data.customGlyphs||customGlyphsRef.current});
+        setImportNotif("Imported & synced");
+      }catch{setImportNotif("Import failed: invalid file");}
+      setTimeout(()=>setImportNotif(""),3500);
+      e.target.value="";
+    };
+    reader.readAsText(file);
+  }
+
+  // ── Online players ──
+  const now=Date.now();
+  const onlinePlayers=Object.entries(players).filter(([,p])=>now-(p.lastSeen||0)<180000);
+
+  // ── Celebration ──
+  const showCelebration=globalPct>=100&&!celebrationDismissed;
+
+  const connDot={offline:"#333",syncing:"#00FFFF",ok:"#4CAF50",error:"#FF3333"}[connStatus];
+
+  // ── Tabs ──
+  const tabs=[
+    {id:"strips",label:`Strips (${allScenarios.length})`},
+    {id:"tasks",label:`Tasks (${myTasksDone}/${total})`},
+    {id:"legend",label:"Glyphs"},
+    {id:"notes",label:`Notes (${notes.length})`},
+    {id:"history",label:`History (${versions.length})`},
+  ];
+
+  return(
+    <div style={{fontFamily:"'Courier New',monospace",background:"#000000",color:"#FFFFFF",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
+
+      {/* Hidden imports */}
+      <input ref={importRef} type="file" accept=".json" style={{display:"none"}} onChange={handleImport}/>
+
+      {/* Celebration overlay */}
+      {showCelebration&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+          <div style={{fontSize:90,fontWeight:900,color:"#FFFFFF",textShadow:"0 0 40px #FFFFFF, 0 0 80px #FFFFFF, 0 0 120px #4AC262",letterSpacing:6,lineHeight:1}}>100%</div>
+          <div style={{fontSize:20,color:"#4AC262",letterSpacing:4,fontWeight:700}}>PROJECT COMPLETE</div>
+          <div style={{fontSize:12,color:"#555",marginTop:8}}>All steps across all scenarios are done.</div>
+          <button onClick={()=>setCelebrationDismissed(true)} style={{marginTop:20,padding:"12px 40px",background:"#4AC262",color:"#000",border:"none",borderRadius:6,fontFamily:"inherit",fontSize:14,fontWeight:900,cursor:"pointer",letterSpacing:2}}>DISMISS</button>
+        </div>
+      )}
+
+      {/* MODALS */}
+      {showSetup&&<SetupPanel playerId={playerId} playerName={playerName} playerColor={playerColor} serverHost={serverHost} onSetName={n=>{setPlayerName(n);}} onSetColor={c=>{setPlayerColor(c);}} onSetHost={h=>{setServerHost(h);}} onDone={()=>setShowSetup(false)}/>}
+      {(showAddScenario||editScenario)&&<AddScenarioModal editing={editScenario} allGlyphs={allGlyphs} onSave={saveScenario} onClose={()=>{setShowAddScenario(false);setEditScenario(null);}}/>}
+      {(showAddGlyph||editGlyph)&&<AddGlyphModal editing={editGlyph} onSave={saveGlyph} onClose={()=>{setShowAddGlyph(false);setEditGlyph(null);}}/>}
+
+      {/* IMPORT NOTIF */}
+      {importNotif&&(
+        <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:importNotif.startsWith("Import failed")?"#1A0000":"#001A0A",border:`1px solid ${importNotif.startsWith("Import failed")?"#FF4444":"#4AC262"}`,color:importNotif.startsWith("Import failed")?"#FF4444":"#4AC262",borderRadius:6,padding:"10px 20px",fontSize:12,fontWeight:700,letterSpacing:1,zIndex:999,boxShadow:"0 4px 20px rgba(0,0,0,0.8)"}}>
+          {importNotif}
+        </div>
+      )}
+
+      {/* BIG PROGRESS COUNTER */}
+      <BigProgressCounter globalPct={globalPct} personalPct={personalPct} playerColor={playerColor} playerName={playerName}/>
+
+      {/* MAIN HEADER */}
+      <div style={{background:"#000000",borderBottom:"2px solid #00FFFF",padding:"12px 24px",boxShadow:"0 2px 20px #00FFFF11",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+          <div style={{width:40,height:40,background:"#00FFFF",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#000",flexShrink:0,boxShadow:"0 0 12px #00FFFF66"}}>SB</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:15,fontWeight:900,letterSpacing:2,color:"#00FFFF"}}>SUPERBOX STORYBOARD SYSTEM</div>
+            <div style={{fontSize:9,color:"#444",marginTop:1,letterSpacing:1}}>v2.0 · NAMED PLAYERS · CLAIMING · PROGRESS COUNTER · CLOCK · HISTORY</div>
+          </div>
+
+          {/* Online players */}
+          {onlinePlayers.length>0&&(
+            <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+              {onlinePlayers.slice(0,6).map(([id,p])=>(
+                <div key={id} title={`${p.name}${id===playerId?" (you)":""}`} style={{width:30,height:30,borderRadius:6,background:p.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:"#000",border:id===playerId?`2px solid #FFF`:"2px solid transparent",boxShadow:id===playerId?`0 0 8px ${p.color}`:"none",flexShrink:0,cursor:"default"}}>
+                  {p.name.slice(0,2).toUpperCase()}
+                </div>
+              ))}
+              {onlinePlayers.length>6&&<span style={{fontSize:10,color:"#555"}}>+{onlinePlayers.length-6}</span>}
+            </div>
+          )}
+
+          {/* Clock */}
+          <ClockDisplay/>
+
+          {/* Actions */}
+          <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}}>
+            <button onClick={()=>saveManualVersion()} style={{background:"#4AC26211",border:"1px solid #4AC26244",borderRadius:4,color:"#4AC262",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:"3px 8px",letterSpacing:1}}>SAVE</button>
+            <button onClick={exportState} style={{background:"#00FFFF11",border:"1px solid #00FFFF44",borderRadius:4,color:"#00FFFF",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:"3px 8px",letterSpacing:1}}>EXPORT</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}}>
+            <button onClick={()=>importRef.current&&importRef.current.click()} style={{background:"#FF95DA11",border:"1px solid #FF95DA44",borderRadius:4,color:"#FF95DA",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:"3px 8px",letterSpacing:1}}>IMPORT</button>
+            <button onClick={()=>setShowSetup(true)} style={{background:"#0A0A0A",border:"1px solid #222",borderRadius:4,color:"#555",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:"3px 8px",letterSpacing:1}}>SETUP</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,flexShrink:0}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:connDot,boxShadow:`0 0 6px ${connDot}`}} title={connStatus}/>
+            <span style={{fontSize:8,color:"#333",letterSpacing:0.5,textTransform:"uppercase"}}>{connStatus}</span>
+          </div>
+        </div>
+
+        {/* TABS */}
+        <div style={{display:"flex",gap:6,marginTop:12,flexWrap:"wrap",alignItems:"center"}}>
+          {tabs.map(tab=>(
+            <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
+              style={{background:activeTab===tab.id?"#00FFFF":"#0A0A0A",color:activeTab===tab.id?"#000":"#FFFFFF",border:`1px solid ${activeTab===tab.id?"#00FFFF":"#333"}`,borderRadius:4,padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",letterSpacing:1,boxShadow:activeTab===tab.id?"0 0 10px #00FFFF44":"none"}}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ACTIVITY FEED */}
+        {activity.length>0&&(
+          <div style={{display:"flex",gap:12,marginTop:8,overflowX:"auto",paddingBottom:2}}>
+            {activity.slice(-4).reverse().map((item,i)=>(
+              <div key={i} className="activity-item" style={{display:"flex",alignItems:"center",gap:5,flexShrink:0,fontSize:10,color:"#444"}}>
+                <div style={{width:7,height:7,borderRadius:"50%",background:item.playerColor,flexShrink:0}}/>
+                <span style={{color:item.playerColor,fontWeight:700}}>{item.playerName}</span>
+                <span>{item.msg}</span>
+                <span style={{color:"#2A2A2A"}}>{new Date(item.at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* CONTENT */}
+      <div style={{flex:1,overflow:"auto",padding:activeTab==="notes"?0:"16px 24px",maxWidth:activeTab==="notes"?"none":1000,margin:"0 auto",width:"100%"}}>
+
+        {/* ── STRIPS ── */}
+        {activeTab==="strips"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
+              <div style={{fontSize:10,color:"#444",letterSpacing:1}}>
+                Click step to <span style={{color:playerColor,fontWeight:700}}>CLAIM</span> it · click claimed to <span style={{color:"#4AC262"}}>COMPLETE</span> · double-click to claim+complete · right-click to release
+              </div>
+              <button onClick={()=>setShowAddScenario(true)} style={{background:"#FF95DA11",border:"1.5px solid #FF95DA55",borderRadius:5,color:"#FF95DA",padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",letterSpacing:1}}>+ Add Scenario</button>
+            </div>
+            {SCENARIOS.map(s=>(
+              <StoryboardStrip key={s.id} scenario={s} checked={checked} claimed={claimed} onStepClick={handleStepClick} onStepDoubleClick={handleStepDoubleClick} onStepRightClick={handleStepRightClick} playerId={playerId} playerColor={playerColor} playerName={playerName} allGlyphs={allGlyphs}/>
+            ))}
+            {customScenarios.length>0&&(
+              <div>
+                <div style={{fontSize:10,color:"#FF95DA",letterSpacing:2,marginTop:20,marginBottom:8,borderTop:"1px dashed #1A1A1A",paddingTop:14}}>CUSTOM SCENARIOS</div>
+                {customScenarios.map(s=>(
+                  <StoryboardStrip key={s.id} scenario={s} checked={checked} claimed={claimed} onStepClick={handleStepClick} onStepDoubleClick={handleStepDoubleClick} onStepRightClick={handleStepRightClick} playerId={playerId} playerColor={playerColor} playerName={playerName} isCustom allGlyphs={allGlyphs} onEdit={sc=>setEditScenario(sc)} onDelete={deleteScenario}/>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TASKS ── */}
+        {activeTab==="tasks"&&(
+          <div>
+            <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+              {[
+                {id:"all",label:"All",count:total,color:"#00FFFF"},
+                {id:"faceplate",label:"Faceplate",count:counts.faceplate,color:LAYER_COLORS.faceplate.border},
+                {id:"face_anim",label:"Face Anim",count:counts.face_anim,color:LAYER_COLORS.face_anim.border},
+                {id:"external",label:"External",count:counts.external,color:LAYER_COLORS.external.border},
+              ].map(f=>(
+                <button key={f.id} onClick={()=>setFilterLayer(f.id)} style={{background:filterLayer===f.id?f.color:"#0A0A0A",color:filterLayer===f.id?"#000":f.color,border:`1.5px solid ${f.color}`,borderRadius:4,padding:"5px 12px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:filterLayer===f.id?`0 0 8px ${f.color}55`:"none"}}>
+                  {f.label} ({f.count})
+                </button>
+              ))}
+              <div style={{marginLeft:"auto",fontSize:11,color:"#555"}}>YOU: {filtered.filter(t=>checked[t.key]?.[playerId]).length}/{filtered.length}</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:2}}>
+              {filtered.map(t=>{
+                const lc=LAYER_COLORS[t.layer];
+                const myCheck=!!checked[t.key]?.[playerId];
+                const othersDone=Object.entries(checked[t.key]||{}).filter(([id,v])=>id!==playerId&&v).map(([id])=>players[id]?.color||"#666");
+                return(
+                  <div key={t.key} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 12px",background:myCheck?"#030A03":lc.bg,border:`1px solid ${myCheck?"#4CAF5022":lc.border+"20"}`,borderRadius:4,borderLeft:`3px solid ${t.color}`,opacity:myCheck?0.7:1}}>
+                    <button onClick={()=>toggleTask(t.key)} style={{width:20,height:20,borderRadius:3,border:`2px solid ${playerColor}`,background:myCheck?playerColor:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0,boxShadow:myCheck?`0 0 6px ${playerColor}66`:"none"}}>
+                      {myCheck&&<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#000" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </button>
+                    {othersDone.length>0&&(
+                      <div style={{display:"flex",gap:2}}>
+                        {othersDone.slice(0,4).map((c,i)=>(
+                          <div key={i} style={{width:14,height:14,borderRadius:2,background:c,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                            <svg width="8" height="8" viewBox="0 0 8 8"><polyline points="1,4 3,6 7,2" stroke="#000" strokeWidth="1.5" fill="none"/></svg>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <span style={{fontSize:10,color:t.color,fontWeight:700,minWidth:20,textAlign:"center"}}>#{typeof t.scenarioId==="string"?"★":t.scenarioId}</span>
+                    <span style={{fontSize:9,color:lc.text,opacity:0.5,textTransform:"uppercase",minWidth:64,letterSpacing:0.5}}>{lc.label}</span>
+                    <span style={{fontSize:12,color:myCheck?"#4CAF50":lc.text,flex:1,textDecoration:myCheck?"line-through":"none",opacity:myCheck?0.5:1}}>{t.task}</span>
+                    {myCheck&&<span style={{fontSize:9,color:"#4CAF50",fontWeight:700,letterSpacing:1,flexShrink:0}}>DONE</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{marginTop:12,fontSize:10,color:"#333"}}>Click checkbox to mark done for yourself. Colored squares = others who marked it done.</div>
+          </div>
+        )}
+
+        {/* ── LEGEND ── */}
+        {activeTab==="legend"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
+              <div style={{fontSize:10,color:"#555",letterSpacing:1}}>GLYPH NOTATION — counter = your completed steps / total uses</div>
+              <button onClick={()=>setShowAddGlyph(true)} style={{background:"#4AC26211",border:"1.5px solid #4AC26255",borderRadius:5,color:"#4AC262",padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",letterSpacing:1}}>+ Add Glyph</button>
+            </div>
+            {Object.entries({
+              "Body Poses":Object.entries(GLYPHS).filter(([k])=>k.startsWith("body_")),
+              "Faceplate States":Object.entries(GLYPHS).filter(([k])=>k.startsWith("face_")),
+              "Eye Tracking":Object.entries(GLYPHS).filter(([k])=>k.startsWith("eyes_")),
+              "Hands":Object.entries(GLYPHS).filter(([k])=>k.startsWith("hand_")),
+              "External Objects":Object.entries(GLYPHS).filter(([k])=>k.startsWith("obj_")),
+              "Effects & Flow":Object.entries(GLYPHS).filter(([k])=>k.startsWith("fx_")||k.startsWith("flow_")),
+            }).map(([group,items])=>(
+              <div key={group} style={{marginBottom:20}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#00FFFF",marginBottom:8,borderBottom:"1px solid #0A2A2A",paddingBottom:4,letterSpacing:2}}>{group}</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:4}}>
+                  {items.map(([key,val])=>{
+                    const prog=getGlyphProgress(key);
+                    const allDone=prog.total>0&&prog.done===prog.total;
+                    const pctColor2=prog.done===0?"#555":allDone?"#00FFFF":"#FF95DA";
+                    return(
+                      <div key={key} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 10px",background:allDone?"#050505":"#080808",borderRadius:3,fontSize:11,border:`1px solid ${allDone?"#00FFFF22":"#111"}`,opacity:allDone?0.45:1}}>
+                        <div style={{display:"flex",flexDirection:"column",alignItems:"center",minWidth:32,flexShrink:0}}>
+                          <span style={{fontSize:18,lineHeight:1,textDecoration:allDone?"line-through":"none",filter:allDone?"grayscale(1)":"none"}}>{val.label}</span>
+                          {prog.total>0&&<span style={{fontSize:8,fontWeight:700,color:pctColor2,letterSpacing:0.5,marginTop:2}}>{prog.done}/{prog.total}</span>}
+                        </div>
+                        <span style={{color:allDone?"#555":"#FFFFFF",textDecoration:allDone?"line-through":"none",textDecorationColor:"#555",fontSize:11}}>{val.desc}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {Object.keys(customGlyphs).length>0&&(
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#4AC262",marginBottom:8,borderBottom:"1px solid #0A1A0A",paddingBottom:4,letterSpacing:2}}>CUSTOM GLYPHS</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:4}}>
+                  {Object.entries(customGlyphs).map(([key,val])=>{
+                    const prog=getGlyphProgress(key);
+                    return(
+                      <div key={key} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 10px",background:"#080808",borderRadius:3,fontSize:11,border:"1px solid #0A1A0A"}}>
+                        <div style={{display:"flex",flexDirection:"column",alignItems:"center",minWidth:32,flexShrink:0}}>
+                          <span style={{fontSize:18,lineHeight:1}}>{val.label}</span>
+                          {prog.total>0&&<span style={{fontSize:8,fontWeight:700,color:"#4AC262",letterSpacing:0.5,marginTop:2}}>{prog.done}/{prog.total}</span>}
+                        </div>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:11,color:"#EEE"}}>{val.desc||"No description"}</div>
+                          <div style={{fontSize:9,color:"#3A3A3A",marginTop:1}}>key: {key}</div>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                          <button onClick={()=>setEditGlyph({key,...val})} style={{background:"none",border:"1px solid #00FFFF33",borderRadius:2,color:"#00FFFF",padding:"1px 6px",fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>Edit</button>
+                          <button onClick={()=>deleteGlyph(key)} style={{background:"none",border:"1px solid #FF444433",borderRadius:2,color:"#FF4444",padding:"1px 6px",fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>Del</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <div style={{marginTop:24}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#00FFFF",marginBottom:8,borderBottom:"1px solid #0A2A2A",paddingBottom:4,letterSpacing:2}}>Layer Color Coding</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {Object.entries(LAYER_COLORS).map(([k,v])=>(
+                  <div key={k} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:v.bg,border:`2px solid ${v.border}`,borderRadius:6,boxShadow:`0 0 8px ${v.border}33`}}>
+                    <span style={{color:v.text,fontWeight:700,fontSize:12,letterSpacing:1}}>{v.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── NOTES ── */}
+        {activeTab==="notes"&&(
+          <div style={{display:"flex",height:"calc(100vh - 220px)"}}>
+            <div style={{width:220,flexShrink:0,borderRight:"1px solid #111",display:"flex",flexDirection:"column",background:"#030303"}}>
+              <div style={{padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #111"}}>
+                <span style={{fontSize:10,color:"#555",letterSpacing:2,fontWeight:700}}>NOTES</span>
+                <button onClick={addNote} style={{background:"#00FFFF",border:"none",borderRadius:4,color:"#000",padding:"4px 10px",fontSize:13,fontWeight:900,cursor:"pointer",lineHeight:1}}>+</button>
+              </div>
+              <div style={{flex:1,overflowY:"auto"}}>
+                {notes.map(note=>(
+                  <div key={note.id} onClick={()=>setActiveNoteId(note.id)} style={{padding:"10px 14px",cursor:"pointer",borderBottom:"1px solid #0A0A0A",background:activeNoteId===note.id?"#0A1818":"transparent",borderLeft:`3px solid ${activeNoteId===note.id?"#00FFFF":"transparent"}`,position:"relative"}}>
+                    <div style={{fontSize:12,fontWeight:activeNoteId===note.id?700:400,color:activeNoteId===note.id?"#FFF":"#999",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{note.title||"Untitled"}</div>
+                    <div style={{fontSize:9,color:"#333",marginTop:3}}>{new Date(note.updatedAt).toLocaleDateString()}</div>
+                    {activeNoteId===note.id&&(
+                      <button onClick={e=>{e.stopPropagation();deleteNote(note.id);}} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#F44336",cursor:"pointer",fontSize:14,padding:"2px 4px",lineHeight:1,opacity:0.6}}>×</button>
+                    )}
+                  </div>
+                ))}
+                {notes.length===0&&<div style={{padding:"24px 14px",fontSize:11,color:"#2A2A2A",lineHeight:1.7}}>No notes yet.<br/>Click <span style={{color:"#00FFFF"}}>+</span> to create one.</div>}
+              </div>
+            </div>
+            {activeNote?(
+              <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+                <input value={activeNote.title} onChange={e=>updateNote(activeNoteId,"title",e.target.value)} placeholder="Note title…"
+                  style={{padding:"16px 24px",background:"#000",border:"none",borderBottom:"1px solid #111",fontSize:18,fontWeight:900,outline:"none",fontFamily:"inherit",color:"#FFF",flexShrink:0}}/>
+                <div style={{flex:1,minHeight:0}}>
+                  <RichTextEditor noteId={activeNoteId} value={activeNote.content} onChange={html=>updateNote(activeNoteId,"content",html)}/>
+                </div>
+                <div style={{padding:"6px 24px",background:"#000",borderTop:"1px solid #0A0A0A",fontSize:9,color:"#222",display:"flex",gap:16}}>
+                  <span>Updated: {new Date(activeNote.updatedAt).toLocaleString()}</span>
+                  <span>Synced to all players</span>
+                </div>
+              </div>
+            ):(
+              <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"#1A1A1A"}}>
+                <div style={{fontSize:40,marginBottom:16}}>📝</div>
+                <div style={{fontSize:13,marginBottom:8}}>Select a note from the sidebar</div>
+                <div style={{fontSize:11}}>or click <span style={{color:"#00FFFF"}}>+</span> to create one</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── HISTORY ── */}
+        {activeTab==="history"&&(
+          <VersionHistoryPanel versions={versions} onRestore={restoreVersion} onSaveManual={saveManualVersion} onDelete={deleteVersion}/>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+class ErrorBoundary extends React.Component{
+  constructor(props){super(props);this.state={error:null};}
+  static getDerivedStateFromError(e){return{error:e};}
+  render(){
+    if(this.state.error){
+      return(
+        <div style={{padding:32,fontFamily:"monospace",background:"#000",color:"#FF4444",minHeight:"100vh"}}>
+          <div style={{fontSize:16,fontWeight:900,marginBottom:12}}>RUNTIME ERROR — open DevTools Console</div>
+          <pre style={{fontSize:13,whiteSpace:"pre-wrap",color:"#FF8888",lineHeight:1.6}}>{String(this.state.error)}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<ErrorBoundary><App/></ErrorBoundary>);
+</script>
+</body>
+</html>

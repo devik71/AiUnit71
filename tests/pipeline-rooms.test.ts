@@ -10,6 +10,13 @@ import { MemoryStore } from "../src/memory/memory-store.js";
 import { CostRouter } from "../src/cost/router.js";
 import { TaskStatus, TaskPriority } from "../src/core/types.js";
 import type { Task } from "../src/core/types.js";
+import type { McpHost } from "../src/mcp/host.js";
+
+const mockMcpHost = {
+    connect: async () => {},
+    callTool: async () => "",
+    getAvailableTools: async () => [],
+} as unknown as McpHost;
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
@@ -60,7 +67,7 @@ describe("EvaluationRoom", () => {
     beforeEach(() => {
         fetchSpy = vi.fn();
         vi.stubGlobal("fetch", fetchSpy);
-        room = new EvaluationRoom(new MemoryStore(), new CostRouter());
+        room = new EvaluationRoom(new MemoryStore(), mockMcpHost, new CostRouter());
     });
     afterEach(() => vi.restoreAllMocks());
 
@@ -124,7 +131,7 @@ describe("ReportMasterRoom", () => {
     beforeEach(() => {
         fetchSpy = vi.fn();
         vi.stubGlobal("fetch", fetchSpy);
-        room = new ReportMasterRoom(new MemoryStore(), new CostRouter());
+        room = new ReportMasterRoom(new MemoryStore(), mockMcpHost, new CostRouter());
     });
     afterEach(() => vi.restoreAllMocks());
 
@@ -187,7 +194,7 @@ describe("FinalizerRoom", () => {
     beforeEach(() => {
         fetchSpy = vi.fn();
         vi.stubGlobal("fetch", fetchSpy);
-        room = new FinalizerRoom(new MemoryStore(), new CostRouter());
+        room = new FinalizerRoom(new MemoryStore(), mockMcpHost, new CostRouter());
     });
     afterEach(() => vi.restoreAllMocks());
 

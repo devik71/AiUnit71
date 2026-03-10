@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/spacetimedb_primitives-970dbf429f0fa8e0.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/attr.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/col_list.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/errno.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/ids.rs
+
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/libspacetimedb_primitives-970dbf429f0fa8e0.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/attr.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/col_list.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/errno.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/ids.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/attr.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/col_list.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/errno.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spacetimedb-primitives-0.10.1/src/ids.rs:

@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Superbox Storyboard System 1.3</title>
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      document.body.innerHTML = '<div style="padding:32px;font-family:monospace;background:#000;color:#FF4444;white-space:pre-wrap;font-size:13px"><b>SCRIPT ERROR</b>\n' + msg + '\nLine ' + line + ':' + col + '\n' + (err && err.stack || '') + '</div>';
+    };
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; color: #FFFFFF; }
+    body { background: #000000; font-family: 'Courier New', monospace; color: #FFFFFF; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: #00FFFF; border-radius: 3px; }
+
+    /* ── Note editor rich text styles ── */
+    .note-editor { caret-color: #00FFFF; }
+    .note-editor h1 { font-size: 22px; font-weight: 900; color: #00FFFF; margin: 12px 0 6px; line-height: 1.3; }
+    .note-editor h2 { font-size: 17px; font-weight: 700; color: #FF95DA; margin: 10px 0 5px; line-height: 1.3; }
+    .note-editor h3 { font-size: 13px; font-weight: 700; color: #EEE; margin: 8px 0 3px; }
+    .note-editor p { margin: 3px 0; }
+    .note-editor ul, .note-editor ol { padding-left: 22px; margin: 4px 0; }
+    .note-editor li { margin: 2px 0; line-height: 1.6; }
+    .note-editor blockquote { border-left: 3px solid #00FFFF55; margin: 8px 0; padding-left: 14px; color: #888; font-style: italic; }
+    .note-editor pre { background: #0A0A0A; border-radius: 4px; padding: 8px 12px; font-family: 'Courier New', monospace; color: #4AC262; font-size: 12px; white-space: pre-wrap; margin: 6px 0; }
+    .note-editor b, .note-editor strong { font-weight: 700; }
+    .note-editor a { color: #00FFFF; text-decoration: underline; }
+    .note-editor:focus { outline: none; }
+    .note-editor:empty::before { content: attr(data-placeholder); color: #2A2A2A; pointer-events: none; display: block; }
+    .tbtn { background: transparent; border: 1px solid #222; border-radius: 3px; color: #AAA; padding: 3px 7px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 11px; transition: background 0.1s, color 0.1s; }
+    .tbtn:hover { background: #1A2A2A; color: #FFF; }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    // ============================================================
+    // SUPERBOX STORYBOARD NOTATION SYSTEM 1.3
+    // brand palette: #00FFFF · #FF95DA · #000000 · #FFFFFF
+    // NEW: custom scenarios · custom glyphs · shared notes
+    // ============================================================
+
+    const GLYPHS = {
+      body_front: { id: "BF", label: "Front", desc: "Маскот обличчям до нас" },
+      body_side_l: { id: "BSL", label: "Side L", desc: "Повернутий боком вліво" },
+      body_side_r: { id: "BSR", label: "Side R", desc: "Повернутий боком вправо" },
+      body_lean_fwd: { id: "BLF", label: "Lean Fwd", desc: "Нахил вперед (поклін)" },
+      body_split: { id: "BSP", label: "Split", desc: "Роздвоєння силуету" },
+      body_merge: { id: "BMG", label: "Merge", desc: "Злиття назад" },
+      body_melt: { id: "BMT", label: "Melt", desc: "Танення вниз" },
+      body_glitch: { id: "BGL", label: "Glitch", desc: "Глітч всього тіла" },
+      body_shake: { id: "BSH", label: "Shake", desc: "Тремтіння" },
+      body_tense: { id: "BTS", label: "Tense", desc: "Напруження" },
+      face_smile: { id: "FS", label: "😊", desc: "Стандартна посмішка" },
+      face_cool: { id: "FC", label: "😎", desc: "Круте обличчя (окуляри)" },
+      face_surprise: { id: "FX", label: "😮", desc: "Здивування" },
+      face_sad: { id: "FD", label: "😢", desc: "Сумне обличчя" },
+      face_squeeze: { id: "FQ", label: "😣", desc: "Зажмурене" },
+      face_smart: { id: "FM", label: "🤓", desc: "Розумні окуляри" },
+      face_dollar: { id: "F$", label: "$", desc: "Знак долару" },
+      face_euro: { id: "F€", label: "€", desc: "Знак євро" },
+      face_qr: { id: "FQR", label: "QR", desc: "QR-код замість обличчя" },
+      face_check: { id: "F✓", label: "✅", desc: "Чекмарк" },
+      face_closed: { id: "FZ", label: "😴", desc: "Заплющені очі" },
+      face_wink: { id: "FW", label: "😉", desc: "Підморгування" },
+      eyes_track_l: { id: "EL", label: "👀←", desc: "Погляд вліво" },
+      eyes_track_r: { id: "ER", label: "👀→", desc: "Погляд вправо" },
+      eyes_track_obj: { id: "ET", label: "👀⟲", desc: "Стежить за обʼєктом" },
+      eyes_scan: { id: "ES", label: "👀↕", desc: "Погляд вгору-вниз (сканування)" },
+      eyes_visor: { id: "EV", label: "🖐👀", desc: "Рука козирком" },
+      hand_appear_l: { id: "HL", label: "✋←", desc: "Ліва рука зʼявляється" },
+      hand_appear_r: { id: "HR", label: "✋→", desc: "Права рука зʼявляється" },
+      hand_grab: { id: "HG", label: "🤏", desc: "Рука хапає" },
+      hand_throw: { id: "HT", label: "🤾", desc: "Кидок" },
+      hand_stretch: { id: "HS", label: "↔✋", desc: "Руки розтягують" },
+      hand_hold_2: { id: "H2", label: "✋✋", desc: "Дві руки тримають" },
+      hand_juggle: { id: "HJ", label: "🤹", desc: "Жонглювання" },
+      hand_extend: { id: "HE", label: "✋→📄", desc: "Простягає обʼєкт" },
+      hand_hide: { id: "HH", label: "🫣", desc: "Ховає за спину" },
+      obj_text_popup: { id: "OT", label: "+TXT⬆", desc: "Спливний текст" },
+      obj_banknote: { id: "OB", label: "💵", desc: "Купюра" },
+      obj_card: { id: "OC", label: "💳", desc: "Банківська картка" },
+      obj_gold: { id: "OG", label: "🥇", desc: "Злиток золота" },
+      obj_wallet: { id: "OW", label: "👛", desc: "Гаманець" },
+      obj_coin_a: { id: "OA", label: "🪙A", desc: "Монета А" },
+      obj_coin_b: { id: "OB2", label: "🪙B", desc: "Монета Б" },
+      obj_envelope: { id: "OE", label: "✉️", desc: "Конверт" },
+      obj_document: { id: "OD", label: "📄", desc: "Документ" },
+      obj_scroll: { id: "OS", label: "📜", desc: "Звиток" },
+      obj_heart: { id: "OH", label: "❤️", desc: "Серце" },
+      obj_tear: { id: "OTR", label: "💧", desc: "Сльоза" },
+      obj_dialog: { id: "ODG", label: "💬", desc: "Діалогове вікно" },
+      obj_stamp_x: { id: "OSX", label: "❌📄", desc: "Штамп відмови" },
+      obj_like: { id: "OL", label: "👍", desc: "Лайк" },
+      obj_stack: { id: "OST", label: "💰", desc: "Стопка купюр" },
+      fx_recycle: { id: "⟲", label: "⟲", desc: "Знак обміну/кругообігу" },
+      fx_scan_line: { id: "▓", label: "▓↓", desc: "Лінія сканеру" },
+      fx_pixel_grow: { id: "◉", label: "◉→□", desc: "Піксель росте" },
+      fx_cascade: { id: "❤❤❤", label: "❤×N", desc: "Каскад обʼєктів" },
+      fx_transform: { id: "→", label: "A→B", desc: "Трансформація" },
+      flow_arrow: { id: "→", label: "→", desc: "Наступний крок" },
+      flow_dash: { id: "—", label: "—", desc: "Роздільник" },
+      flow_pause: { id: "⏸", label: "⏸", desc: "Пауза" },
+    };
+
+    const SCENARIOS = [
+      { id: 1, title: "Купівля/продаж криптовалюти", titleEn: "Crypto Buy/Sell", color: "#F7931A", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть прямо" }, { glyph: "face_smile", layer: "faceplate", note: "Посмішка" }, { glyph: "obj_text_popup", layer: "external", note: "+BTC / +ERC / +SOL вгору" }, { glyph: "face_cool", layer: "faceplate", note: "Окуляри, крутий вираз" }, { glyph: "face_smile", layer: "faceplate", note: "Повернення до посмішки" }], nonBodyTasks: ["Faceplate: перехід smile → cool (окуляри) → smile", "External: анімація спливного тексту +BTC/+ERC/+SOL що летить вгору", "External: стиль тексту — ретро-ігровий (damage numbers)"] },
+      { id: 2, title: "Покупка/продаж валют", titleEn: "Currency Buy/Sell", color: "#2E86AB", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть прямо" }, { glyph: "body_split", layer: "body", note: "Роздвоєння" }, { glyph: "obj_banknote", layer: "external", note: "Купюри летять між силуетами" }, { glyph: "body_merge", layer: "body", note: "Злиття назад" }, { glyph: "face_smile", layer: "faceplate", note: "Посмішка" }], nonBodyTasks: ["External: анімація купюр що летять між двома силуетами", "Faceplate: стандартна посмішка на обох силуетах під час split"] },
+      { id: 3, title: "Обмін валют", titleEn: "Currency Exchange", color: "#4CAF50", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть" }, { glyph: "eyes_track_obj", layer: "face_anim", note: "Очі стежать за купюрою" }, { glyph: "obj_banknote", layer: "external", note: "Купюра залітає ззовні" }, { glyph: "face_dollar", layer: "faceplate", note: "Обличчя → знак $" }, { glyph: "fx_recycle", layer: "external", note: "Знак кругообігу" }, { glyph: "face_euro", layer: "faceplate", note: "Обличчя → знак €" }, { glyph: "obj_banknote", layer: "external", note: "Купюра вилізає назовні" }, { glyph: "face_smile", layer: "faceplate", note: "Посмішка повертається" }, { glyph: "eyes_track_obj", layer: "face_anim", note: "Проводжає поглядом" }], nonBodyTasks: ["Face anim: eye tracking — стежить за купюрою вліво→центр", "Faceplate: послідовність smile → $ → ⟲ → € → smile", "External: купюра залітає, потім вилітає назад", "External: анімація знаку кругообігу", "Face anim: eye tracking — проводжає купюру центр→вправо"] },
+      { id: 4, title: "Видача картки", titleEn: "Card Issuance", color: "#9C27B0", steps: [{ glyph: "body_side_r", layer: "body", note: "Повернутий боком" }, { glyph: "obj_card", layer: "external", note: "Картка вилізає з тіла (тостер)" }, { glyph: "face_surprise", layer: "faceplate", note: "Здивоване обличчя" }, { glyph: "eyes_track_obj", layer: "face_anim", note: "Дивиться на картку" }, { glyph: "hand_grab", layer: "body", note: "Бере картку рукою" }, { glyph: "body_front", layer: "body", note: "Повертається обличчям" }, { glyph: "hand_extend", layer: "body", note: "Простягає картку в камеру" }, { glyph: "face_smile", layer: "faceplate", note: "Посмішка" }], nonBodyTasks: ["Faceplate: перехід surprise → smile", "Face anim: eye tracking на картку під час виходу", "External: картка — анімація виходу як тост з тостера", "External: картка рухається з рукою до камери"] },
+      { id: 5, title: "Продаж золота", titleEn: "Gold Sale", color: "#FFD700", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть" }, { glyph: "face_squeeze", layer: "faceplate", note: "Зажмурюється" }, { glyph: "body_tense", layer: "body", note: "Напруження" }, { glyph: "obj_gold", layer: "external", note: "Злитки вилітають зверху (3-5)" }, { glyph: "obj_gold", layer: "external", note: "Падають пірамідкою збоку" }, { glyph: "fx_transform", layer: "external", note: "Злитки → стопки купюр" }, { glyph: "obj_stack", layer: "external", note: "Стеки купюр гіркою" }, { glyph: "face_smile", layer: "faceplate", note: "Розслаблення, посмішка" }], nonBodyTasks: ["Faceplate: перехід squeeze (зажмурення) → smile", "External: злитки вилітають зверху як з тостера", "External: злитки падають і складаються пірамідкою", "External: трансформація злитків у стопки купюр"] },
+      { id: 6, title: "Cashin / Cashout", titleEn: "Cashin / Cashout", color: "#00BCD4", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть" }, { glyph: "obj_wallet", layer: "external", note: "Гаманець зʼявляється" }, { glyph: "obj_banknote", layer: "external", note: "Наповнення / спустошення" }, { glyph: "face_smile", layer: "faceplate", note: "Радість (cashin)" }, { glyph: "face_sad", layer: "faceplate", note: "Філософський сум (cashout)" }], nonBodyTasks: ["Faceplate: варіантна розвилка — smile (cashin) АБО sad (cashout)", "External: гаманець зʼявляється перед маскотом", "External: анімація наповнення/спустошення гаманця"] },
+      { id: 7, title: "Отримання QR коду", titleEn: "QR Code", color: "#333333", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть" }, { glyph: "face_smile", layer: "faceplate", note: "Дивиться в камеру" }, { glyph: "hand_stretch", layer: "body", note: "Руки розтягують обличчя" }, { glyph: "face_qr", layer: "faceplate", note: "Обличчя → QR-код" }, { glyph: "face_smile", layer: "faceplate", note: "Відпускає, обличчя назад" }, { glyph: "face_wink", layer: "faceplate", note: "Підморгування" }], nonBodyTasks: ["Faceplate: морф smile → QR-код → smile", "Face anim: підморгування в кінці", "Faceplate: анімація розтягування обличчя в QR"] },
+      { id: 8, title: "Завантаження банкомату", titleEn: "Boot Sequence", color: "#1A237E", steps: [{ glyph: "fx_pixel_grow", layer: "external", note: "Один піксель → весь екран" }, { glyph: "face_closed", layer: "faceplate", note: "Заплющені очі" }, { glyph: "eyes_scan", layer: "face_anim", note: "Розплющує, дивиться в боки" }, { glyph: "face_smile", layer: "faceplate", note: "Посмішка" }], nonBodyTasks: ["External: анімація пікселя що росте в екран", "Faceplate: closed → відкриті очі → smile", "Face anim: погляд вліво → вправо → центр"] },
+      { id: 9, title: "Out of Service", titleEn: "Out of Service", color: "#B71C1C", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть" }, { glyph: "obj_dialog", layer: "external", note: "Діалогове вікно" }, { glyph: "obj_text_popup", layer: "external", note: "OUT OF SERVICE по літерах" }, { glyph: "body_melt", layer: "body", note: "Танення вниз" }, { glyph: "body_shake", layer: "body", note: "Трясе обличчям" }, { glyph: "body_front", layer: "body", note: "Різко в початкову позицію" }], nonBodyTasks: ["External: діалогове вікно з типографською анімацією літер", "External: зникнення діалогового вікна", "Face anim: тремтіння обличчя під час shake"] },
+      { id: 10, title: "Немає звʼязку", titleEn: "No Connection", color: "#607D8B", steps: [{ glyph: "body_glitch", layer: "body", note: "Весь персонаж глітчить" }], nonBodyTasks: ["Faceplate: глітч-ефект на faceplate", "Face anim: глітч-ефект на face layer", "External: глітч-ефект на позиції (зсуви, артефакти)"] },
+      { id: 11, title: "Операція успішна", titleEn: "Success", color: "#E91E63", steps: [{ glyph: "obj_heart", layer: "external", note: "Серця вилітають" }, { glyph: "fx_cascade", layer: "external", note: "Каскад серць" }, { glyph: "body_lean_fwd", layer: "body", note: "Поклін" }, { glyph: "body_front", layer: "body", note: "Випрямляється" }, { glyph: "face_wink", layer: "faceplate", note: "Підморгує" }], nonBodyTasks: ["External: анімація серць — одне → два → каскад", "Faceplate: підморгування в кінці"] },
+      { id: 12, title: "Операція неуспішна", titleEn: "Failure", color: "#795548", steps: [{ glyph: "face_sad", layer: "faceplate", note: "Сумне обличчя" }, { glyph: "obj_tear", layer: "external", note: "Сльоза з ока" }, { glyph: "obj_tear", layer: "external", note: "Крапля випадає, розбивається" }], nonBodyTasks: ["Faceplate: перехід до sad", "Face anim: генерація сльози з конкретного ока", "External: фізика краплі — падіння + розбиття на пікселі"] },
+      { id: 13, title: "Верифікацію пройдено", titleEn: "Verification OK", color: "#4CAF50", steps: [{ glyph: "fx_scan_line", layer: "external", note: "Зелена полоса сканує" }, { glyph: "face_check", layer: "faceplate", note: "Обличчя → чекмарк ✅" }], nonBodyTasks: ["External: зелена лінія сканера зверху вниз по faceplate", "Faceplate: морф обличчя → чекмарк"] },
+      { id: 14, title: "Верифікацію не пройдено", titleEn: "Verification Failed", color: "#F44336", steps: [{ glyph: "hand_extend", layer: "body", note: "Простягає документ" }, { glyph: "obj_document", layer: "external", note: "Документ виходить за екран" }, { glyph: "obj_stamp_x", layer: "external", note: "Повертається зі штампом ❌" }, { glyph: "eyes_track_obj", layer: "face_anim", note: "Розглядає штамп" }, { glyph: "hand_hide", layer: "body", note: "Ховає за спину" }], nonBodyTasks: ["External: документ виходить за межі екрану і повертається", "External: червоний штамп Х зʼявляється на документі", "Face anim: eye tracking на документ зі штампом"] },
+      { id: 15, title: "Криптообмін", titleEn: "Crypto Swap", color: "#FF9800", steps: [{ glyph: "hand_hold_2", layer: "body", note: "Дві руки — дві монети" }, { glyph: "eyes_track_l", layer: "face_anim", note: "Дивиться на ліву" }, { glyph: "eyes_track_r", layer: "face_anim", note: "Дивиться на праву" }, { glyph: "hand_juggle", layer: "body", note: "Жонглює, міняє місцями" }, { glyph: "face_cool", layer: "faceplate", note: "Задоволено демонструє" }], nonBodyTasks: ["Face anim: eye tracking ліво → право (голова крутиться)", "Faceplate: перехід до cool/задоволеного", "External: дві різні монети (крипто-іконки)"] },
+      { id: 16, title: "Перекази MONEYGRAM", titleEn: "MoneyGram Transfer", color: "#D32F2F", steps: [{ glyph: "eyes_visor", layer: "face_anim", note: "Дивиться вдалечінь" }, { glyph: "hand_throw", layer: "body", note: "Жбурляє конверт" }, { glyph: "obj_envelope", layer: "external", note: "Конверт летить за екран" }, { glyph: "obj_like", layer: "external", note: "Лайк повертається" }, { glyph: "face_wink", layer: "faceplate", note: "Задоволено кліпає" }], nonBodyTasks: ["Face anim: поза 'козирок' — рука над очима", "External: конверт летить і зникає за екраном", "External: лайк/серце повертається", "Faceplate: підморгування"] },
+      { id: 17, title: "Платежі", titleEn: "Payments", color: "#3F51B5", steps: [{ glyph: "body_front", layer: "body", note: "Стоїть" }, { glyph: "obj_scroll", layer: "external", note: "Звиток зʼявляється поруч" }, { glyph: "body_side_r", layer: "body", note: "Повертається до звитку" }, { glyph: "face_smart", layer: "faceplate", note: "Розумні окуляри" }, { glyph: "eyes_track_obj", layer: "face_anim", note: "Вивчає звиток" }], nonBodyTasks: ["External: піксельний звиток зʼявляється поруч", "Faceplate: зміна на 'розумні окуляри'", "Face anim: eye tracking — вивчає звиток"] },
+    ];
+
+    const LAYER_COLORS = {
+      body: { bg: "#111111", border: "#444444", text: "#CCCCCC", label: "BODY" },
+      faceplate: { bg: "#001515", border: "#00FFFF", text: "#7FFFFF", label: "FACEPLATE" },
+      face_anim: { bg: "#180010", border: "#FF95DA", text: "#FFBBEE", label: "FACE ANIM" },
+      external: { bg: "#0A1A0A", border: "#4AC262", text: "#8BFFA8", label: "EXTERNAL" },
+    };
+
+    const PLAYERS = {
+      p1: { color: "#00FFFF", label: "P1" },
+      p2: { color: "#FF95DA", label: "P2" },
+    };
+
+    const GLYPH_STEP_COUNTS = {};
+    SCENARIOS.forEach(s => s.steps.forEach(step => {
+      GLYPH_STEP_COUNTS[step.glyph] = (GLYPH_STEP_COUNTS[step.glyph] || 0) + 1;
+    }));
+
+    const PRESET_COLORS = ["#00FFFF","#FF95DA","#4AC262","#FFD700","#FF9800","#F7931A","#9C27B0","#F44336","#2196F3","#E91E63","#D32F2F","#3F51B5"];
+
+    function stepKey(scenarioId, i) { return `step-${scenarioId}-${i}`; }
+    function taskKey(scenarioId, i) { return `${scenarioId}-${i}`; }
+    function uid() { return `c_${Date.now()}_${Math.random().toString(36).slice(2,7)}`; }
+
+    // ── GLYPH ICON ────────────────────────────────────────────────────
+    function GlyphIcon({ type, size = 28 }) {
+      const s = size, h = s / 2;
+      const icons = {
+        body_front: <g><rect x={4} y={2} width={s-8} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><rect x={8} y={6} width={s-16} height={s-16} rx={1} fill="none" stroke="currentColor" strokeWidth={1.5}/><line x1={h-3} y1={s-6} x2={h-3} y2={s-2} stroke="currentColor" strokeWidth={1.5}/><line x1={h+3} y1={s-6} x2={h+3} y2={s-2} stroke="currentColor" strokeWidth={1.5}/></g>,
+        body_side_r: <g><rect x={6} y={2} width={s-12} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><line x1={8} y1={h} x2={s-8} y2={h-4} stroke="currentColor" strokeWidth={1.5}/><line x1={h} y1={s-6} x2={h} y2={s-2} stroke="currentColor" strokeWidth={1.5}/></g>,
+        body_side_l: <g><rect x={6} y={2} width={s-12} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><line x1={s-8} y1={h} x2={8} y2={h-4} stroke="currentColor" strokeWidth={1.5}/><line x1={h} y1={s-6} x2={h} y2={s-2} stroke="currentColor" strokeWidth={1.5}/></g>,
+        body_split: <g><rect x={2} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5} strokeDasharray="2 2"/><rect x={s-14} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5} strokeDasharray="2 2"/><line x1={h} y1={6} x2={h} y2={s-6} stroke="currentColor" strokeWidth={1} strokeDasharray="3 3" opacity={0.4}/></g>,
+        body_merge: <g><rect x={2} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5}/><rect x={s-14} y={4} width={12} height={s-8} rx={2} fill="none" stroke="currentColor" strokeWidth={1.5}/><path d={`M14 ${h} L${s-14} ${h}`} stroke="currentColor" strokeWidth={1.5}/></g>,
+        body_melt: <g><path d={`M6 4 L6 ${s-10} Q${h} ${s} ${s-6} ${s-10} L${s-6} 4 Z`} fill="none" stroke="currentColor" strokeWidth={2}/><circle cx={h-4} cy={12} r={2} fill="currentColor"/><circle cx={h+4} cy={12} r={2} fill="currentColor"/></g>,
+        body_glitch: <g><rect x={4} y={2} width={s-8} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2} strokeDasharray="4 2"/><line x1={2} y1={h} x2={s-2} y2={h} stroke="currentColor" strokeWidth={1} opacity={0.5}/><rect x={6} y={h-2} width={8} height={4} fill="currentColor" opacity={0.3}/><rect x={s-14} y={h+2} width={6} height={3} fill="currentColor" opacity={0.3}/></g>,
+        body_shake: <g><rect x={6} y={4} width={s-12} height={s-8} rx={3} fill="none" stroke="currentColor" strokeWidth={2}/><path d={`M3 ${h-4} L1 ${h} L3 ${h+4}`} stroke="currentColor" strokeWidth={1.5} fill="none"/><path d={`M${s-3} ${h-4} L${s-1} ${h} L${s-3} ${h+4}`} stroke="currentColor" strokeWidth={1.5} fill="none"/></g>,
+        body_tense: <g><rect x={4} y={2} width={s-8} height={s-4} rx={3} fill="none" stroke="currentColor" strokeWidth={2.5}/><line x1={2} y1={4} x2={6} y2={8} stroke="currentColor" strokeWidth={1.5}/><line x1={s-2} y1={4} x2={s-6} y2={8} stroke="currentColor" strokeWidth={1.5}/><line x1={2} y1={s-4} x2={6} y2={s-8} stroke="currentColor" strokeWidth={1.5}/><line x1={s-2} y1={s-4} x2={s-6} y2={s-8} stroke="currentColor" strokeWidth={1.5}/></g>,
+        body_lean_fwd: <g><rect x={4} y={6} width={s-8} height={s-10} rx={3} fill="none" stroke="currentColor" strokeWidth={2} transform={`rotate(-15 ${h} ${h})`}/></g>,
+      };
+      const icon = icons[type];
+      return (
+        <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} style={{ display: "block" }}>
+          {icon || <text x={h} y={h+4} textAnchor="middle" fontSize={9} fill="currentColor" fontFamily="monospace">{(GLYPHS[type] || {}).id || "?"}</text>}
+        </svg>
+      );
+    }
+
+    // ── STORYBOARD STRIP ─────────────────────────────────────────────
+    function StoryboardStrip({ scenario, checked, onToggleStep, playerId, isCustom, onEdit, onDelete, allGlyphs }) {
+      const glyphs = allGlyphs || GLYPHS;
+      return (
+        <div style={{ background: "#080808", border: "1px solid #1A1A1A", borderLeft: `4px solid ${scenario.color}`, borderRadius: 6, padding: "12px 16px", marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <span style={{ background: scenario.color, color: "#000", fontWeight: 900, fontSize: 11, minWidth: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{typeof scenario.id === "string" ? "★" : scenario.id}</span>
+            <span style={{ fontWeight: 700, fontSize: 13, color: "#FFFFFF" }}>{scenario.title}</span>
+            <span style={{ fontSize: 11, color: "#FFFFFF", fontStyle: "italic" }}>{scenario.titleEn}</span>
+            {isCustom && (
+              <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                <button onClick={() => onEdit(scenario)} style={{ background: "#0A1A2A", border: "1px solid #00FFFF44", borderRadius: 3, color: "#00FFFF", padding: "2px 8px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Edit</button>
+                <button onClick={() => onDelete(scenario.id)} style={{ background: "#1A0A0A", border: "1px solid #FF444444", borderRadius: 3, color: "#FF4444", padding: "2px 8px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Delete</button>
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", padding: "8px 0", borderTop: "1px dashed #1A1A1A", borderBottom: "1px dashed #1A1A1A" }}>
+            {scenario.steps.map((step, i) => {
+              const lc = LAYER_COLORS[step.layer] || LAYER_COLORS.external;
+              const key = stepKey(scenario.id, i);
+              const myDone = !!checked[key]?.[playerId];
+              const g = glyphs[step.glyph];
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  {i > 0 && <span style={{ color: "#333", fontSize: 14, margin: "0 2px" }}>—</span>}
+                  <div onClick={() => onToggleStep(key)} title={`${step.note}\n[${lc.label}]\nClick to mark done`}
+                    style={{ background: lc.bg, border: `1.5px solid ${myDone ? lc.border : lc.border + "55"}`, borderRadius: 4, padding: "4px 6px", display: "flex", flexDirection: "column", alignItems: "center", minWidth: 52, cursor: "pointer", position: "relative", opacity: myDone ? 0.55 : 1, transition: "opacity 0.15s" }}>
+                    {myDone && (
+                      <div style={{ position: "absolute", top: 2, right: 2, width: 11, height: 11, borderRadius: 2, background: PLAYERS[playerId].color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <svg width="8" height="8" viewBox="0 0 8 8"><polyline points="1,4 3,6 7,2" stroke="#000" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    )}
+                    <div style={{ color: myDone ? lc.text + "88" : lc.text, marginBottom: 2, textDecoration: myDone ? "line-through" : "none" }}>
+                      {g ? <span style={{ fontSize: 16 }}>{g.label}</span> : <GlyphIcon type={step.glyph} size={26}/>}
+                    </div>
+                    <span style={{ fontSize: 7, color: lc.text, opacity: myDone ? 0.35 : 0.7, textTransform: "uppercase", letterSpacing: 0.5 }}>{lc.label}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 6, fontSize: 10, color: "#FFFFFF", lineHeight: 1.6 }}>
+            {scenario.steps.map((s, i) => {
+              const done = !!checked[stepKey(scenario.id, i)]?.[playerId];
+              return (
+                <span key={i}>
+                  {i > 0 && <span style={{ color: "#333" }}> → </span>}
+                  <span style={{ color: done ? "#444" : (s.layer === "body" ? "#FFFFFF" : LAYER_COLORS[s.layer]?.border) || "#FFFFFF", textDecoration: done ? "line-through" : "none" }}>{s.note}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ── SETUP PANEL ───────────────────────────────────────────────────
+    function SetupPanel({ playerId, serverHost, onSetPlayer, onSetHost, onDone }) {
+      const [hostInput, setHostInput] = useState(serverHost);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+          <div style={{ background: "#050505", border: "2px solid #00FFFF", borderRadius: 10, padding: 32, width: 380, maxWidth: "90vw", boxShadow: "0 0 40px #00FFFF22" }}>
+            <div style={{ fontSize: 17, fontWeight: 900, color: "#00FFFF", marginBottom: 4, letterSpacing: 2 }}>MULTIPLAYER SETUP</div>
+            <div style={{ fontSize: 10, color: "#888", marginBottom: 24, letterSpacing: 1 }}>REAL-TIME SSE SYNC</div>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "#888", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>You are</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {["p1","p2"].map(pid => (
+                  <button key={pid} onClick={() => onSetPlayer(pid)} style={{ flex: 1, padding: "11px 0", background: playerId === pid ? PLAYERS[pid].color : "#111", color: playerId === pid ? "#000" : PLAYERS[pid].color, border: `2px solid ${PLAYERS[pid].color}`, borderRadius: 6, fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", letterSpacing: 2 }}>{PLAYERS[pid].label}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "#888", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Sync server host</div>
+              <div style={{ fontSize: 10, color: "#666", marginBottom: 8, lineHeight: 1.7 }}>P1: run <span style={{ color: "#00FFFF" }}>node server.js</span> · P2: enter P1's IP</div>
+              <input value={hostInput} onChange={e => setHostInput(e.target.value)} placeholder="localhost or 192.168.1.X" style={{ width: "100%", background: "#0A0A0A", border: "1.5px solid #222", borderRadius: 4, color: "#EEE", fontFamily: "inherit", fontSize: 13, padding: "9px 10px", outline: "none" }}/>
+            </div>
+            <div style={{ fontSize: 10, color: "#555", marginBottom: 20 }}>No server? Works offline — state saved locally only.</div>
+            <button onClick={() => { onSetHost(hostInput); onDone(); }} style={{ width: "100%", padding: "13px 0", background: "#00FFFF", color: "#000", border: "none", borderRadius: 6, fontSize: 14, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", letterSpacing: 2 }}>START</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── PROGRESS BAR ──────────────────────────────────────────────────
+    function ProgressBar({ done, total, color, label }) {
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 130 }}>
+          <span style={{ fontSize: 11, color, fontWeight: 700, minWidth: 22 }}>{label}</span>
+          <div style={{ flex: 1, height: 5, background: "#111", borderRadius: 3, overflow: "hidden", minWidth: 60 }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 3, transition: "width 0.3s ease", boxShadow: `0 0 6px ${color}88` }}/>
+          </div>
+          <span style={{ fontSize: 10, color: "#666", minWidth: 40 }}>{done}/{total}</span>
+        </div>
+      );
+    }
+
+    // ── RICH TEXT EDITOR ─────────────────────────────────────────────
+    function RichTextEditor({ noteId, value, onChange }) {
+      const editorRef = useRef(null);
+      const prevIdRef = useRef(null);
+
+      useEffect(() => {
+        if (noteId !== prevIdRef.current && editorRef.current) {
+          prevIdRef.current = noteId;
+          editorRef.current.innerHTML = value || "";
+        }
+      }, [noteId, value]);
+
+      const exec = (cmd, val = null) => {
+        editorRef.current?.focus();
+        document.execCommand(cmd, false, val);
+      };
+
+      const Sep = () => <div style={{ width: 1, background: "#222", margin: "0 3px", alignSelf: "stretch" }}/>;
+
+      const Btn = ({ onClick, title, children, mono }) => (
+        <button className="tbtn" onMouseDown={e => { e.preventDefault(); onClick(); }} title={title}
+          style={{ fontWeight: mono ? 700 : 400, fontStyle: title === "Italic" ? "italic" : "normal", textDecoration: title === "Underline" ? "underline" : title === "Strike" ? "line-through" : "none" }}>
+          {children}
+        </button>
+      );
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+          <div style={{ display: "flex", gap: 2, flexWrap: "wrap", padding: "5px 8px", background: "#080808", borderBottom: "1px solid #1A1A1A", flexShrink: 0, alignItems: "center" }}>
+            <Btn onClick={() => exec("bold")} title="Bold" mono>B</Btn>
+            <Btn onClick={() => exec("italic")} title="Italic">I</Btn>
+            <Btn onClick={() => exec("underline")} title="Underline">U</Btn>
+            <Btn onClick={() => exec("strikeThrough")} title="Strike">S</Btn>
+            <Sep/>
+            <Btn onClick={() => exec("formatBlock", "h1")} title="Heading 1">H1</Btn>
+            <Btn onClick={() => exec("formatBlock", "h2")} title="Heading 2">H2</Btn>
+            <Btn onClick={() => exec("formatBlock", "h3")} title="Heading 3">H3</Btn>
+            <Btn onClick={() => exec("formatBlock", "p")} title="Paragraph">¶</Btn>
+            <Sep/>
+            <Btn onClick={() => exec("insertUnorderedList")} title="Bullet list">• List</Btn>
+            <Btn onClick={() => exec("insertOrderedList")} title="Numbered list">1. List</Btn>
+            <Sep/>
+            <Btn onClick={() => exec("formatBlock", "blockquote")} title="Quote">❝ Quote</Btn>
+            <Btn onClick={() => exec("formatBlock", "pre")} title="Code block">{"</>"} Code</Btn>
+            <Sep/>
+            <Btn onClick={() => exec("justifyLeft")} title="Align left">⬅ L</Btn>
+            <Btn onClick={() => exec("justifyCenter")} title="Center">⬛ C</Btn>
+            <Sep/>
+            <Btn onClick={() => exec("removeFormat")} title="Clear formatting">✕ Fmt</Btn>
+          </div>
+          <div
+            ref={editorRef}
+            contentEditable
+            suppressContentEditableWarning
+            className="note-editor"
+            data-placeholder="Start typing your note… use toolbar above for formatting"
+            onInput={() => onChange && onChange(editorRef.current.innerHTML)}
+            style={{ flex: 1, padding: "20px 24px", background: "#030303", outline: "none", overflowY: "auto", lineHeight: 1.75, fontSize: 14, color: "#DDD", minHeight: 0 }}
+          />
+        </div>
+      );
+    }
+
+    // ── ADD / EDIT SCENARIO MODAL ────────────────────────────────────
+    function AddScenarioModal({ editing, allGlyphs, onSave, onClose }) {
+      const isEdit = !!editing;
+      const [title, setTitle] = useState(editing?.title || "");
+      const [titleEn, setTitleEn] = useState(editing?.titleEn || "");
+      const [color, setColor] = useState(editing?.color || "#00FFFF");
+      const [steps, setSteps] = useState(editing?.steps ? editing.steps.map(s => ({...s})) : []);
+      const [tasks, setTasks] = useState(editing?.nonBodyTasks ? [...editing.nonBodyTasks] : []);
+      const [newTask, setNewTask] = useState("");
+
+      const glyphKeys = Object.keys(allGlyphs);
+
+      const addStep = () => setSteps(p => [...p, { glyph: glyphKeys[0] || "body_front", layer: "body", note: "" }]);
+      const removeStep = i => setSteps(p => p.filter((_, j) => j !== i));
+      const updateStep = (i, field, val) => setSteps(p => p.map((s, j) => j === i ? { ...s, [field]: val } : s));
+      const addTask = () => { if (newTask.trim()) { setTasks(p => [...p, newTask.trim()]); setNewTask(""); } };
+      const removeTask = i => setTasks(p => p.filter((_, j) => j !== i));
+
+      const inp = { width: "100%", background: "#0A0A0A", border: "1.5px solid #222", borderRadius: 4, color: "#EEE", fontFamily: "inherit", fontSize: 13, padding: "8px 10px", outline: "none" };
+      const label = { fontSize: 10, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 };
+
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.97)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 200, overflowY: "auto", padding: "24px 16px" }}>
+          <div style={{ background: "#060606", border: "2px solid #FF95DA", borderRadius: 10, padding: 28, width: "100%", maxWidth: 620, boxShadow: "0 0 40px #FF95DA11", marginBottom: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: "#FF95DA", marginBottom: 22, letterSpacing: 2 }}>{isEdit ? "EDIT SCENARIO" : "ADD SCENARIO"}</div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={label}>Title</div>
+              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Назва сценарію" style={inp}/>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={label}>Title (English)</div>
+              <input value={titleEn} onChange={e => setTitleEn(e.target.value)} placeholder="Scenario name" style={inp}/>
+            </div>
+
+            <div style={{ marginBottom: 18 }}>
+              <div style={label}>Accent color</div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                {PRESET_COLORS.map(c => (
+                  <div key={c} onClick={() => setColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", border: color === c ? "2.5px solid #FFF" : "2px solid transparent", boxShadow: color === c ? `0 0 8px ${c}88` : "none", flexShrink: 0 }}/>
+                ))}
+                <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 28, height: 22, padding: 0, border: "none", background: "none", cursor: "pointer", flexShrink: 0 }}/>
+                <span style={{ fontSize: 10, color: "#555" }}>{color}</span>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <div style={label}>Steps ({steps.length})</div>
+                <button onClick={addStep} style={{ background: "#FF95DA11", border: "1px solid #FF95DA55", borderRadius: 4, color: "#FF95DA", padding: "3px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>+ Step</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 230, overflowY: "auto" }}>
+                {steps.map((step, i) => (
+                  <div key={i} style={{ display: "flex", gap: 5, alignItems: "center", background: "#0A0A0A", padding: "5px 8px", borderRadius: 4, border: "1px solid #181818" }}>
+                    <span style={{ fontSize: 10, color: "#333", minWidth: 16, textAlign: "center" }}>{i+1}</span>
+                    <select value={step.glyph} onChange={e => updateStep(i, "glyph", e.target.value)}
+                      style={{ background: "#111", border: "1px solid #222", color: "#EEE", padding: "3px 4px", borderRadius: 3, fontFamily: "inherit", fontSize: 11, flex: "0 0 140px" }}>
+                      {glyphKeys.map(k => <option key={k} value={k}>{(allGlyphs[k]?.label || k).slice(0,8)} · {k}</option>)}
+                    </select>
+                    <select value={step.layer} onChange={e => updateStep(i, "layer", e.target.value)}
+                      style={{ background: "#111", border: "1px solid #222", color: "#EEE", padding: "3px 4px", borderRadius: 3, fontFamily: "inherit", fontSize: 11, flex: "0 0 90px" }}>
+                      {["body","faceplate","face_anim","external"].map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                    <input value={step.note} onChange={e => updateStep(i, "note", e.target.value)} placeholder="note…"
+                      style={{ background: "#111", border: "1px solid #222", color: "#EEE", padding: "3px 6px", borderRadius: 3, fontFamily: "inherit", fontSize: 11, flex: 1, outline: "none" }}/>
+                    <button onClick={() => removeStep(i)} style={{ background: "none", border: "none", color: "#F44336", cursor: "pointer", fontSize: 16, padding: "0 2px", lineHeight: 1 }}>×</button>
+                  </div>
+                ))}
+                {steps.length === 0 && <div style={{ fontSize: 11, color: "#2A2A2A", padding: "10px 8px" }}>No steps — click + Step to add</div>}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 22 }}>
+              <div style={label}>Task descriptions (non-body layers)</div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                <input value={newTask} onChange={e => setNewTask(e.target.value)} onKeyDown={e => e.key === "Enter" && addTask()} placeholder="Faceplate: …"
+                  style={{ flex: 1, background: "#0A0A0A", border: "1.5px solid #222", borderRadius: 4, color: "#EEE", fontFamily: "inherit", fontSize: 12, padding: "6px 10px", outline: "none" }}/>
+                <button onClick={addTask} style={{ background: "#00FFFF11", border: "1px solid #00FFFF44", borderRadius: 4, color: "#00FFFF", padding: "6px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Add</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {tasks.map((t, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: "#0A0A0A", padding: "5px 10px", borderRadius: 3 }}>
+                    <span style={{ flex: 1, fontSize: 12, color: "#CCC" }}>{t}</span>
+                    <button onClick={() => removeTask(i)} style={{ background: "none", border: "none", color: "#F44336", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={onClose} style={{ flex: 1, padding: "11px 0", background: "transparent", border: "1.5px solid #222", borderRadius: 6, color: "#555", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CANCEL</button>
+              <button onClick={() => title.trim() && onSave({ title: title.trim(), titleEn: titleEn.trim(), color, steps, nonBodyTasks: tasks })}
+                style={{ flex: 2, padding: "11px 0", background: title.trim() ? "#FF95DA" : "#1A1A1A", border: "none", borderRadius: 6, color: title.trim() ? "#000" : "#444", cursor: title.trim() ? "pointer" : "default", fontFamily: "inherit", fontSize: 13, fontWeight: 900, letterSpacing: 2 }}>
+                {isEdit ? "SAVE CHANGES" : "CREATE SCENARIO"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── ADD / EDIT GLYPH MODAL ───────────────────────────────────────
+    function AddGlyphModal({ editing, onSave, onClose }) {
+      const isEdit = !!editing;
+      const [label, setLabel] = useState(editing?.label || "");
+      const [desc, setDesc] = useState(editing?.desc || "");
+      const [keyVal, setKeyVal] = useState(editing?.key || "");
+      const [idVal, setIdVal] = useState(editing?.id || "");
+
+      const autoKey = label.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "") || "custom";
+      const effectiveKey = isEdit ? editing.key : (keyVal.trim() || autoKey);
+
+      const inp = { width: "100%", background: "#0A0A0A", border: "1.5px solid #222", borderRadius: 4, color: "#EEE", fontFamily: "inherit", fontSize: 13, padding: "8px 10px", outline: "none" };
+      const lbl = { fontSize: 10, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 };
+
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.97)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
+          <div style={{ background: "#060606", border: "2px solid #4AC262", borderRadius: 10, padding: 28, width: "100%", maxWidth: 400, boxShadow: "0 0 40px #4AC26211" }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: "#4AC262", marginBottom: 22, letterSpacing: 2 }}>{isEdit ? "EDIT GLYPH" : "ADD GLYPH"}</div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={lbl}>Label (emoji or short text)</div>
+              <input value={label} onChange={e => setLabel(e.target.value)} placeholder="💡 or short text" style={inp} autoFocus/>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={lbl}>Description</div>
+              <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="What does this glyph represent?" style={inp}/>
+            </div>
+            {!isEdit && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={lbl}>Key (used in scenarios) — auto: <span style={{ color: "#4AC262" }}>{autoKey}</span></div>
+                <input value={keyVal} onChange={e => setKeyVal(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} placeholder={autoKey} style={inp}/>
+              </div>
+            )}
+            <div style={{ marginBottom: 20 }}>
+              <div style={lbl}>Short ID code (optional)</div>
+              <input value={idVal} onChange={e => setIdVal(e.target.value.slice(0, 6))} placeholder={label.slice(0, 4).toUpperCase() || "ID"} style={inp}/>
+            </div>
+
+            {label && (
+              <div style={{ marginBottom: 20, padding: "12px 16px", background: "#0A0A0A", borderRadius: 6, border: "1px solid #1A1A1A", display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 28 }}>{label}</span>
+                <div>
+                  <div style={{ fontSize: 12, color: "#EEE" }}>{desc || "No description"}</div>
+                  <div style={{ fontSize: 10, color: "#555", marginTop: 2 }}>key: <span style={{ color: "#4AC262" }}>{effectiveKey}</span> · id: {idVal || label.slice(0,4).toUpperCase()}</div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={onClose} style={{ flex: 1, padding: "11px 0", background: "transparent", border: "1.5px solid #222", borderRadius: 6, color: "#555", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CANCEL</button>
+              <button onClick={() => label.trim() && onSave({ key: effectiveKey, id: idVal.trim() || label.slice(0,4).toUpperCase(), label: label.trim(), desc: desc.trim() })}
+                style={{ flex: 2, padding: "11px 0", background: label.trim() ? "#4AC262" : "#1A1A1A", border: "none", borderRadius: 6, color: label.trim() ? "#000" : "#444", cursor: label.trim() ? "pointer" : "default", fontFamily: "inherit", fontSize: 13, fontWeight: 900, letterSpacing: 2 }}>
+                {isEdit ? "SAVE CHANGES" : "CREATE GLYPH"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── MAIN APP ──────────────────────────────────────────────────────
+    function App() {
+      const [activeTab, setActiveTab] = useState("strips");
+      const [filterLayer, setFilterLayer] = useState("all");
+      const [showSetup, setShowSetup] = useState(true);
+      const [playerId, setPlayerId] = useState(() => localStorage.getItem("sb_player") || "p1");
+      const [serverHost, setServerHost] = useState(() => localStorage.getItem("sb_host") || "localhost");
+      const [checked, setChecked] = useState(() => { try { return JSON.parse(localStorage.getItem("sb_checked") || "{}"); } catch { return {}; } });
+      const [connStatus, setConnStatus] = useState("offline");
+
+      // ── NEW state ──
+      const [customScenarios, setCustomScenarios] = useState(() => { try { return JSON.parse(localStorage.getItem("sb_custom_scenarios") || "[]"); } catch { return []; } });
+      const [customGlyphs, setCustomGlyphs] = useState(() => { try { return JSON.parse(localStorage.getItem("sb_custom_glyphs") || "{}"); } catch { return {}; } });
+      const [notes, setNotes] = useState(() => { try { return JSON.parse(localStorage.getItem("sb_notes") || "[]"); } catch { return []; } });
+      const [activeNoteId, setActiveNoteId] = useState(null);
+      const [showAddScenario, setShowAddScenario] = useState(false);
+      const [editScenario, setEditScenario] = useState(null);
+      const [showAddGlyph, setShowAddGlyph] = useState(false);
+      const [editGlyph, setEditGlyph] = useState(null);
+
+      // refs for sync
+      const lastSyncRef = useRef(null);
+      const esRef = useRef(null);
+      const checkedRef = useRef(checked);
+      const notesRef = useRef(notes);
+      const customScenariosRef = useRef(customScenarios);
+      const customGlyphsRef = useRef(customGlyphs);
+      const noteDebounceRef = useRef(null);
+      const importRef = useRef(null);
+      const [importNotif, setImportNotif] = useState("");
+
+      useEffect(() => { checkedRef.current = checked; }, [checked]);
+      useEffect(() => { notesRef.current = notes; }, [notes]);
+      useEffect(() => { customScenariosRef.current = customScenarios; }, [customScenarios]);
+      useEffect(() => { customGlyphsRef.current = customGlyphs; }, [customGlyphs]);
+
+      // localStorage persistence
+      useEffect(() => { localStorage.setItem("sb_player", playerId); }, [playerId]);
+      useEffect(() => { localStorage.setItem("sb_host", serverHost); }, [serverHost]);
+      useEffect(() => { localStorage.setItem("sb_checked", JSON.stringify(checked)); }, [checked]);
+      useEffect(() => { localStorage.setItem("sb_custom_scenarios", JSON.stringify(customScenarios)); }, [customScenarios]);
+      useEffect(() => { localStorage.setItem("sb_custom_glyphs", JSON.stringify(customGlyphs)); }, [customGlyphs]);
+      useEffect(() => { localStorage.setItem("sb_notes", JSON.stringify(notes)); }, [notes]);
+
+      const syncUrl = `http://${serverHost}:3001`;
+
+      const pushAll = useCallback(async (overrides = {}) => {
+        try {
+          setConnStatus("syncing");
+          const payload = {
+            checked: checkedRef.current,
+            notes: notesRef.current,
+            customScenarios: customScenariosRef.current,
+            customGlyphs: customGlyphsRef.current,
+            ...overrides,
+          };
+          await fetch(`${syncUrl}/state`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+          setConnStatus("ok");
+        } catch { setConnStatus("error"); }
+      }, [syncUrl]);
+
+      const pullState = useCallback(async () => {
+        try {
+          const res = await fetch(`${syncUrl}/state`);
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          const snap = JSON.stringify(data.checked);
+          if (snap !== lastSyncRef.current) { lastSyncRef.current = snap; setChecked(data.checked || {}); }
+          if (data.notes) setNotes(data.notes);
+          if (data.customScenarios) setCustomScenarios(data.customScenarios);
+          if (data.customGlyphs) setCustomGlyphs(data.customGlyphs);
+          setConnStatus("ok");
+        } catch { setConnStatus("error"); }
+      }, [syncUrl]);
+
+      useEffect(() => {
+        if (showSetup) return;
+        pullState();
+        if (esRef.current) { esRef.current.close(); esRef.current = null; }
+        const es = new EventSource(`${syncUrl}/events`);
+        esRef.current = es;
+        es.onopen = () => setConnStatus("ok");
+        es.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const snap = JSON.stringify(data.checked);
+            if (snap !== lastSyncRef.current) { lastSyncRef.current = snap; setChecked(data.checked || {}); }
+            if (data.notes) setNotes(data.notes);
+            if (data.customScenarios) setCustomScenarios(data.customScenarios);
+            if (data.customGlyphs) setCustomGlyphs(data.customGlyphs);
+            setConnStatus("ok");
+          } catch {}
+        };
+        es.onerror = () => setConnStatus("error");
+        return () => { es.close(); esRef.current = null; };
+      }, [showSetup, syncUrl]);
+
+      // merged glyphs + scenarios
+      const allGlyphs = useMemo(() => ({ ...GLYPHS, ...customGlyphs }), [customGlyphs]);
+      const allScenarios = useMemo(() => [...SCENARIOS, ...customScenarios], [customScenarios]);
+
+      // toggle check
+      function toggleItem(key) {
+        setChecked(prev => {
+          const entry = prev[key] || {};
+          const updated = { ...prev, [key]: { ...entry, [playerId]: !entry[playerId] } };
+          pushAll({ checked: updated });
+          return updated;
+        });
+      }
+
+      // tasks from all scenarios
+      const allTasks = useMemo(() => allScenarios.flatMap(s =>
+        (s.nonBodyTasks || []).map((task, i) => ({
+          scenario: s.title, scenarioId: s.id, color: s.color, task,
+          key: taskKey(s.id, i),
+          layer: task.startsWith("Faceplate") ? "faceplate" : task.startsWith("Face anim") ? "face_anim" : "external",
+        }))
+      ), [allScenarios]);
+
+      const filtered = filterLayer === "all" ? allTasks : allTasks.filter(t => t.layer === filterLayer);
+      const total = allTasks.length;
+      const p1Done = allTasks.filter(t => checked[t.key]?.p1).length;
+      const p2Done = allTasks.filter(t => checked[t.key]?.p2).length;
+      const counts = { faceplate: allTasks.filter(t => t.layer === "faceplate").length, face_anim: allTasks.filter(t => t.layer === "face_anim").length, external: allTasks.filter(t => t.layer === "external").length };
+
+      function getGlyphProgress(glyphKey) {
+        let done = 0;
+        const total = (GLYPH_STEP_COUNTS[glyphKey] || 0) + customScenarios.reduce((n, s) => n + s.steps.filter(st => st.glyph === glyphKey).length, 0);
+        allScenarios.forEach(s => s.steps.forEach((step, i) => { if (step.glyph === glyphKey && checked[stepKey(s.id, i)]?.[playerId]) done++; }));
+        return { done, total };
+      }
+
+      // ── Notes handlers ──
+      const activeNote = notes.find(n => n.id === activeNoteId) || null;
+
+      function addNote() {
+        const n = { id: uid(), title: "Untitled Note", content: "", createdAt: Date.now(), updatedAt: Date.now() };
+        setNotes(prev => {
+          const updated = [...prev, n];
+          pushAll({ notes: updated });
+          return updated;
+        });
+        setActiveNoteId(n.id);
+      }
+
+      function deleteNote(id) {
+        setNotes(prev => {
+          const updated = prev.filter(n => n.id !== id);
+          pushAll({ notes: updated });
+          return updated;
+        });
+        if (activeNoteId === id) setActiveNoteId(null);
+      }
+
+      function updateNote(noteId, field, value) {
+        setNotes(prev => {
+          const updated = prev.map(n => n.id === noteId ? { ...n, [field]: value, updatedAt: Date.now() } : n);
+          if (noteDebounceRef.current) clearTimeout(noteDebounceRef.current);
+          noteDebounceRef.current = setTimeout(() => pushAll({ notes: notesRef.current }), 1500);
+          return updated;
+        });
+      }
+
+      // ── Custom scenario handlers ──
+      function saveScenario(data) {
+        if (editScenario) {
+          setCustomScenarios(prev => {
+            const updated = prev.map(s => s.id === editScenario.id ? { ...s, ...data } : s);
+            pushAll({ customScenarios: updated });
+            return updated;
+          });
+          setEditScenario(null);
+        } else {
+          const newS = { ...data, id: uid() };
+          setCustomScenarios(prev => {
+            const updated = [...prev, newS];
+            pushAll({ customScenarios: updated });
+            return updated;
+          });
+          setShowAddScenario(false);
+        }
+      }
+
+      function deleteScenario(id) {
+        setCustomScenarios(prev => {
+          const updated = prev.filter(s => s.id !== id);
+          pushAll({ customScenarios: updated });
+          return updated;
+        });
+      }
+
+      // ── Custom glyph handlers ──
+      function saveGlyph(data) {
+        const updated = { ...customGlyphsRef.current, [data.key]: { id: data.id, label: data.label, desc: data.desc } };
+        setCustomGlyphs(updated);
+        pushAll({ customGlyphs: updated });
+        setShowAddGlyph(false);
+        setEditGlyph(null);
+      }
+
+      function deleteGlyph(key) {
+        const updated = { ...customGlyphsRef.current };
+        delete updated[key];
+        setCustomGlyphs(updated);
+        pushAll({ customGlyphs: updated });
+      }
+
+      // ── Export / Import state ──
+      function exportState() {
+        const snapshot = {
+          version: "1.3",
+          exportedAt: new Date().toISOString(),
+          exportedBy: playerId,
+          checked,
+          notes,
+          customScenarios,
+          customGlyphs,
+        };
+        const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "superbox-state-" + new Date().toISOString().slice(0, 10) + ".json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function handleImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            let newChecked = JSON.parse(JSON.stringify(checkedRef.current));
+            let newNotes = [...notesRef.current];
+            let newCustomScenarios = customScenariosRef.current;
+            let newCustomGlyphs = customGlyphsRef.current;
+
+            // Merge checked: if either side has it checked keep it
+            if (data.checked) {
+              Object.keys(data.checked).forEach(k => {
+                if (!newChecked[k]) newChecked[k] = {};
+                if (data.checked[k].p1) newChecked[k].p1 = true;
+                if (data.checked[k].p2) newChecked[k].p2 = true;
+              });
+              setChecked(newChecked);
+            }
+
+            // Merge notes by id — newer updatedAt wins
+            if (data.notes && data.notes.length) {
+              const byId = {};
+              newNotes.forEach(n => byId[n.id] = n);
+              data.notes.forEach(n => {
+                if (!byId[n.id] || (n.updatedAt || 0) > (byId[n.id].updatedAt || 0)) byId[n.id] = n;
+              });
+              newNotes = Object.values(byId).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+              setNotes(newNotes);
+            }
+
+            // Replace shared definitions
+            if (data.customScenarios) { newCustomScenarios = data.customScenarios; setCustomScenarios(data.customScenarios); }
+            if (data.customGlyphs)    { newCustomGlyphs = data.customGlyphs;       setCustomGlyphs(data.customGlyphs); }
+
+            // Push merged result to server so other player sees it too
+            pushAll({ checked: newChecked, notes: newNotes, customScenarios: newCustomScenarios, customGlyphs: newCustomGlyphs });
+
+            setImportNotif("Imported & synced — progress merged");
+          } catch { setImportNotif("Import failed: not a valid state file"); }
+          setTimeout(() => setImportNotif(""), 3500);
+          e.target.value = "";
+        };
+        reader.readAsText(file);
+      }
+
+      const connDot = { offline: "#333", syncing: "#00FFFF", ok: "#4CAF50", error: "#FF3333" }[connStatus];
+      const otherPid = playerId === "p1" ? "p2" : "p1";
+
+      return (
+        <div style={{ fontFamily: "'Courier New',monospace", background: "#000000", color: "#FFFFFF", minHeight: "100vh" }}>
+
+          {/* Hidden file input for import */}
+          <input ref={importRef} type="file" accept=".json" style={{ display: "none" }} onChange={handleImport}/>
+
+          {/* Import notification toast */}
+          {importNotif && (
+            <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: importNotif.startsWith("Import failed") ? "#1A0000" : "#001A0A", border: `1px solid ${importNotif.startsWith("Import failed") ? "#FF4444" : "#4AC262"}`, color: importNotif.startsWith("Import failed") ? "#FF4444" : "#4AC262", borderRadius: 6, padding: "10px 20px", fontSize: 12, fontWeight: 700, letterSpacing: 1, zIndex: 999, boxShadow: "0 4px 20px rgba(0,0,0,0.8)" }}>
+              {importNotif}
+            </div>
+          )}
+
+          {/* MODALS */}
+          {showSetup && <SetupPanel playerId={playerId} serverHost={serverHost} onSetPlayer={setPlayerId} onSetHost={setServerHost} onDone={() => setShowSetup(false)}/>}
+          {(showAddScenario || editScenario) && (
+            <AddScenarioModal
+              editing={editScenario}
+              allGlyphs={allGlyphs}
+              onSave={saveScenario}
+              onClose={() => { setShowAddScenario(false); setEditScenario(null); }}
+            />
+          )}
+          {(showAddGlyph || editGlyph) && (
+            <AddGlyphModal
+              editing={editGlyph}
+              onSave={saveGlyph}
+              onClose={() => { setShowAddGlyph(false); setEditGlyph(null); }}
+            />
+          )}
+
+          {/* HEADER */}
+          <div style={{ background: "#000000", borderBottom: "2px solid #00FFFF", padding: "16px 24px", boxShadow: "0 2px 20px #00FFFF11" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ width: 44, height: 44, background: "#00FFFF", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 18, color: "#000", flexShrink: 0, boxShadow: "0 0 12px #00FFFF66" }}>SB</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 17, fontWeight: 900, letterSpacing: 2, color: "#00FFFF" }}>SUPERBOX STORYBOARD SYSTEM</div>
+                <div style={{ fontSize: 10, color: "#555", marginTop: 2, letterSpacing: 1 }}>v1.3 · BODY → FACEPLATE → FACE ANIM → EXTERNAL OBJECTS</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <ProgressBar done={p1Done} total={total} color={PLAYERS.p1.color} label="P1"/>
+                  <ProgressBar done={p2Done} total={total} color={PLAYERS.p2.color} label="P2"/>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {["p1","p2"].map(pid => (
+                    <button key={pid} onClick={() => setPlayerId(pid)} style={{ background: playerId === pid ? PLAYERS[pid].color : "#0A0A0A", color: playerId === pid ? "#000" : PLAYERS[pid].color, border: `1.5px solid ${PLAYERS[pid].color}`, borderRadius: 4, padding: "3px 10px", fontSize: 11, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", letterSpacing: 1, boxShadow: playerId === pid ? `0 0 8px ${PLAYERS[pid].color}66` : "none" }}>{PLAYERS[pid].label}</button>
+                  ))}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <button onClick={exportState} style={{ background: "#00FFFF11", border: "1px solid #00FFFF44", borderRadius: 4, color: "#00FFFF", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: "4px 8px", letterSpacing: 1 }}>EXPORT</button>
+                  <button onClick={() => importRef.current && importRef.current.click()} style={{ background: "#FF95DA11", border: "1px solid #FF95DA44", borderRadius: 4, color: "#FF95DA", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: "4px 8px", letterSpacing: 1 }}>IMPORT</button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }} title={connStatus}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: connDot, boxShadow: `0 0 6px ${connDot}` }}/>
+                  <button onClick={() => setShowSetup(true)} style={{ background: "none", border: "none", color: "#555", fontSize: 9, cursor: "pointer", fontFamily: "inherit", padding: 0, letterSpacing: 1 }}>SETUP</button>
+                </div>
+              </div>
+            </div>
+
+            {/* TABS */}
+            <div style={{ display: "flex", gap: 6, marginTop: 14, flexWrap: "wrap" }}>
+              {[
+                { id: "strips", label: `Storyboard Strips (${allScenarios.length})` },
+                { id: "tasks", label: `Tasks (${p1Done + p2Done}/${total * 2})` },
+                { id: "legend", label: "Glyph Legend" },
+                { id: "notes", label: `Notes (${notes.length})` },
+              ].map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  style={{ background: activeTab === tab.id ? "#00FFFF" : "#0A0A0A", color: activeTab === tab.id ? "#000" : "#FFFFFF", border: `1px solid ${activeTab === tab.id ? "#00FFFF" : "#333"}`, borderRadius: 4, padding: "7px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 1, boxShadow: activeTab === tab.id ? "0 0 10px #00FFFF44" : "none" }}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* CONTENT */}
+          <div style={{ padding: activeTab === "notes" ? 0 : "16px 24px", maxWidth: activeTab === "notes" ? "none" : 980, margin: "0 auto" }}>
+
+            {/* ── STRIPS ── */}
+            {activeTab === "strips" && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ fontSize: 10, color: "#555", letterSpacing: 1 }}>{SCENARIOS.length} built-in · {customScenarios.length} custom — click step to mark done</div>
+                  <button onClick={() => setShowAddScenario(true)} style={{ background: "#FF95DA11", border: "1.5px solid #FF95DA55", borderRadius: 5, color: "#FF95DA", padding: "6px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 1 }}>+ Add Scenario</button>
+                </div>
+                {SCENARIOS.map(s => (
+                  <StoryboardStrip key={s.id} scenario={s} checked={checked} onToggleStep={toggleItem} playerId={playerId} allGlyphs={allGlyphs}/>
+                ))}
+                {customScenarios.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 10, color: "#FF95DA", letterSpacing: 2, marginTop: 20, marginBottom: 8, borderTop: "1px dashed #1A1A1A", paddingTop: 14 }}>CUSTOM SCENARIOS</div>
+                    {customScenarios.map(s => (
+                      <StoryboardStrip key={s.id} scenario={s} checked={checked} onToggleStep={toggleItem} playerId={playerId} isCustom allGlyphs={allGlyphs}
+                        onEdit={sc => setEditScenario(sc)} onDelete={deleteScenario}/>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── TASKS ── */}
+            {activeTab === "tasks" && (
+              <div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+                  {[
+                    { id: "all", label: "All", count: total, color: "#00FFFF" },
+                    { id: "faceplate", label: "Faceplate", count: counts.faceplate, color: LAYER_COLORS.faceplate.border },
+                    { id: "face_anim", label: "Face Anim", count: counts.face_anim, color: LAYER_COLORS.face_anim.border },
+                    { id: "external", label: "External", count: counts.external, color: LAYER_COLORS.external.border },
+                  ].map(f => (
+                    <button key={f.id} onClick={() => setFilterLayer(f.id)} style={{ background: filterLayer === f.id ? f.color : "#0A0A0A", color: filterLayer === f.id ? "#000" : f.color, border: `1.5px solid ${f.color}`, borderRadius: 4, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: filterLayer === f.id ? `0 0 8px ${f.color}55` : "none" }}>
+                      {f.label} ({f.count})
+                    </button>
+                  ))}
+                  <div style={{ marginLeft: "auto", display: "flex", gap: 14, fontSize: 11 }}>
+                    <span style={{ color: PLAYERS.p1.color }}>P1: {filtered.filter(t => checked[t.key]?.p1).length}/{filtered.length}</span>
+                    <span style={{ color: PLAYERS.p2.color }}>P2: {filtered.filter(t => checked[t.key]?.p2).length}/{filtered.length}</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {filtered.map(t => {
+                    const lc = LAYER_COLORS[t.layer];
+                    const myCheck = !!checked[t.key]?.[playerId];
+                    const othCheck = !!checked[t.key]?.[otherPid];
+                    const bothDone = checked[t.key]?.p1 && checked[t.key]?.p2;
+                    return (
+                      <div key={t.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", background: bothDone ? "#030A03" : lc.bg, border: `1px solid ${bothDone ? "#4CAF5022" : lc.border + "20"}`, borderRadius: 4, borderLeft: `3px solid ${t.color}`, opacity: myCheck && !bothDone ? 0.7 : 1 }}>
+                        <button onClick={() => toggleItem(t.key)} style={{ width: 20, height: 20, borderRadius: 3, border: `2px solid ${PLAYERS[playerId].color}`, background: myCheck ? PLAYERS[playerId].color : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 0, boxShadow: myCheck ? `0 0 6px ${PLAYERS[playerId].color}66` : "none" }}>
+                          {myCheck && <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#000" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </button>
+                        <div style={{ width: 20, height: 20, borderRadius: 3, border: `2px solid ${PLAYERS[otherPid].color}`, background: othCheck ? PLAYERS[otherPid].color : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: 0.7 }}>
+                          {othCheck && <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#000" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </div>
+                        <span style={{ fontSize: 10, color: t.color, fontWeight: 700, minWidth: 20, textAlign: "center" }}>#{typeof t.scenarioId === "string" ? "★" : t.scenarioId}</span>
+                        <span style={{ fontSize: 9, color: lc.text, opacity: 0.5, textTransform: "uppercase", minWidth: 64, letterSpacing: 0.5 }}>{lc.label}</span>
+                        <span style={{ fontSize: 12, color: bothDone ? "#4CAF50" : lc.text, flex: 1, textDecoration: myCheck ? "line-through" : "none", opacity: myCheck ? 0.5 : 1 }}>{t.task}</span>
+                        {bothDone && <span style={{ fontSize: 9, color: "#4CAF50", fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>DONE</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 14, fontSize: 10, color: "#555", display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <span><span style={{ color: PLAYERS[playerId].color, fontWeight: 700 }}>Left box</span> = your check ({PLAYERS[playerId].label})</span>
+                  <span><span style={{ color: PLAYERS[otherPid].color, fontWeight: 700 }}>Right box</span> = other player</span>
+                  <span style={{ color: "#4CAF50" }}>Both checked = DONE</span>
+                </div>
+              </div>
+            )}
+
+            {/* ── LEGEND ── */}
+            {activeTab === "legend" && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ fontSize: 10, color: "#555", letterSpacing: 1 }}>VISUAL NOTATION — counter = your checked steps / total uses</div>
+                  <button onClick={() => setShowAddGlyph(true)} style={{ background: "#4AC26211", border: "1.5px solid #4AC26255", borderRadius: 5, color: "#4AC262", padding: "6px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: 1 }}>+ Add Glyph</button>
+                </div>
+
+                {Object.entries({
+                  "Body Poses": Object.entries(GLYPHS).filter(([k]) => k.startsWith("body_")),
+                  "Faceplate States": Object.entries(GLYPHS).filter(([k]) => k.startsWith("face_")),
+                  "Eye Tracking (Face Anim)": Object.entries(GLYPHS).filter(([k]) => k.startsWith("eyes_")),
+                  "Hands / Appendages": Object.entries(GLYPHS).filter(([k]) => k.startsWith("hand_")),
+                  "External Objects": Object.entries(GLYPHS).filter(([k]) => k.startsWith("obj_")),
+                  "Effects & Transitions": Object.entries(GLYPHS).filter(([k]) => k.startsWith("fx_") || k.startsWith("flow_")),
+                }).map(([group, items]) => (
+                  <div key={group} style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#00FFFF", marginBottom: 8, borderBottom: "1px solid #0A2A2A", paddingBottom: 4, letterSpacing: 2 }}>{group}</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 4 }}>
+                      {items.map(([key, val]) => {
+                        const prog = getGlyphProgress(key);
+                        const allDone = prog.total > 0 && prog.done === prog.total;
+                        const hasProg = prog.total > 0;
+                        const pctColor = prog.done === 0 ? "#555" : allDone ? "#00FFFF" : "#FF95DA";
+                        return (
+                          <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", background: allDone ? "#050505" : "#080808", borderRadius: 3, fontSize: 11, border: `1px solid ${allDone ? "#00FFFF22" : "#111"}`, opacity: allDone ? 0.45 : 1 }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 32, flexShrink: 0 }}>
+                              <span style={{ fontSize: 18, lineHeight: 1, textDecoration: allDone ? "line-through" : "none", filter: allDone ? "grayscale(1)" : "none" }}>{val.label}</span>
+                              {hasProg && <span style={{ fontSize: 8, fontWeight: 700, color: pctColor, letterSpacing: 0.5, marginTop: 2 }}>{prog.done}/{prog.total}</span>}
+                            </div>
+                            <span style={{ color: allDone ? "#555" : "#FFFFFF", textDecoration: allDone ? "line-through" : "none", textDecorationColor: "#555", fontSize: 11 }}>{val.desc}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Custom Glyphs section */}
+                {Object.keys(customGlyphs).length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#4AC262", marginBottom: 8, borderBottom: "1px solid #0A1A0A", paddingBottom: 4, letterSpacing: 2 }}>CUSTOM GLYPHS</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 4 }}>
+                      {Object.entries(customGlyphs).map(([key, val]) => {
+                        const prog = getGlyphProgress(key);
+                        const allDone = prog.total > 0 && prog.done === prog.total;
+                        return (
+                          <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", background: "#080808", borderRadius: 3, fontSize: 11, border: "1px solid #0A1A0A", opacity: allDone ? 0.45 : 1 }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 32, flexShrink: 0 }}>
+                              <span style={{ fontSize: 18, lineHeight: 1 }}>{val.label}</span>
+                              {prog.total > 0 && <span style={{ fontSize: 8, fontWeight: 700, color: "#4AC262", letterSpacing: 0.5, marginTop: 2 }}>{prog.done}/{prog.total}</span>}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 11, color: "#EEE" }}>{val.desc || "No description"}</div>
+                              <div style={{ fontSize: 9, color: "#3A3A3A", marginTop: 1 }}>key: {key}</div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                              <button onClick={() => setEditGlyph({ key, ...val })} style={{ background: "none", border: "1px solid #00FFFF33", borderRadius: 2, color: "#00FFFF", padding: "1px 6px", fontSize: 9, cursor: "pointer", fontFamily: "inherit" }}>Edit</button>
+                              <button onClick={() => deleteGlyph(key)} style={{ background: "none", border: "1px solid #FF444433", borderRadius: 2, color: "#FF4444", padding: "1px 6px", fontSize: 9, cursor: "pointer", fontFamily: "inherit" }}>Del</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#00FFFF", marginBottom: 8, borderBottom: "1px solid #0A2A2A", paddingBottom: 4, letterSpacing: 2 }}>Layer Color Coding</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {Object.entries(LAYER_COLORS).map(([k, v]) => (
+                      <div key={k} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", background: v.bg, border: `2px solid ${v.border}`, borderRadius: 6, boxShadow: `0 0 8px ${v.border}33` }}>
+                        <span style={{ color: v.text, fontWeight: 700, fontSize: 12, letterSpacing: 1 }}>{v.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── NOTES ── */}
+            {activeTab === "notes" && (
+              <div style={{ display: "flex", height: "calc(100vh - 145px)" }}>
+                {/* Sidebar */}
+                <div style={{ width: 220, flexShrink: 0, borderRight: "1px solid #111", display: "flex", flexDirection: "column", background: "#030303" }}>
+                  <div style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #111" }}>
+                    <span style={{ fontSize: 10, color: "#555", letterSpacing: 2, fontWeight: 700 }}>NOTES</span>
+                    <button onClick={addNote} style={{ background: "#00FFFF", border: "none", borderRadius: 4, color: "#000", padding: "4px 10px", fontSize: 13, fontWeight: 900, cursor: "pointer", lineHeight: 1 }}>+</button>
+                  </div>
+                  <div style={{ flex: 1, overflowY: "auto" }}>
+                    {notes.map(note => (
+                      <div key={note.id} onClick={() => setActiveNoteId(note.id)} style={{ padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #0A0A0A", background: activeNoteId === note.id ? "#0A1818" : "transparent", borderLeft: `3px solid ${activeNoteId === note.id ? "#00FFFF" : "transparent"}`, position: "relative" }}>
+                        <div style={{ fontSize: 12, fontWeight: activeNoteId === note.id ? 700 : 400, color: activeNoteId === note.id ? "#FFF" : "#999", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{note.title || "Untitled"}</div>
+                        <div style={{ fontSize: 9, color: "#333", marginTop: 3 }}>{new Date(note.updatedAt).toLocaleDateString()}</div>
+                        {activeNoteId === note.id && (
+                          <button onClick={e => { e.stopPropagation(); deleteNote(note.id); }}
+                            style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#F44336", cursor: "pointer", fontSize: 14, padding: "2px 4px", lineHeight: 1, opacity: 0.6 }}>×</button>
+                        )}
+                      </div>
+                    ))}
+                    {notes.length === 0 && (
+                      <div style={{ padding: "24px 14px", fontSize: 11, color: "#2A2A2A", lineHeight: 1.7 }}>
+                        No notes yet.<br/>Click <span style={{ color: "#00FFFF" }}>+</span> to create one.<br/><br/>Notes are shared between P1 and P2 in real time.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Editor area */}
+                {activeNote ? (
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+                    <input
+                      value={activeNote.title}
+                      onChange={e => updateNote(activeNoteId, "title", e.target.value)}
+                      placeholder="Note title…"
+                      style={{ padding: "16px 24px", background: "#000", border: "none", borderBottom: "1px solid #111", fontSize: 18, fontWeight: 900, outline: "none", fontFamily: "inherit", color: "#FFF", flexShrink: 0 }}
+                    />
+                    <div style={{ flex: 1, minHeight: 0 }}>
+                      <RichTextEditor noteId={activeNoteId} value={activeNote.content} onChange={html => updateNote(activeNoteId, "content", html)}/>
+                    </div>
+                    <div style={{ padding: "6px 24px", background: "#000", borderTop: "1px solid #0A0A0A", fontSize: 9, color: "#222", display: "flex", gap: 16 }}>
+                      <span>Updated: {new Date(activeNote.updatedAt).toLocaleString()}</span>
+                      <span>Synced to all players via server</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#1A1A1A" }}>
+                    <div style={{ fontSize: 40, marginBottom: 16 }}>📝</div>
+                    <div style={{ fontSize: 13, marginBottom: 8 }}>Select a note from the sidebar</div>
+                    <div style={{ fontSize: 11 }}>or click <span style={{ color: "#00FFFF" }}>+</span> to create one</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    class ErrorBoundary extends React.Component {
+      constructor(props) { super(props); this.state = { error: null }; }
+      static getDerivedStateFromError(e) { return { error: e }; }
+      render() {
+        if (this.state.error) {
+          return (
+            <div style={{ padding: 32, fontFamily: "monospace", background: "#000", color: "#FF4444", minHeight: "100vh" }}>
+              <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>RUNTIME ERROR — open DevTools Console for full trace</div>
+              <pre style={{ fontSize: 13, whiteSpace: "pre-wrap", color: "#FF8888", lineHeight: 1.6 }}>{String(this.state.error)}</pre>
+            </div>
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<ErrorBoundary><App /></ErrorBoundary>);
+  </script>
+</body>
+
+</html>

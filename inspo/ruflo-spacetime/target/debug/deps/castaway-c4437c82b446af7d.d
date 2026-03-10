@@ -1,0 +1,8 @@
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/castaway-c4437c82b446af7d.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/internal.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/lifetime_free.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/utils.rs
+
+/Users/macbook/Desktop/aiunit71/inspo/ruflo-spacetime/target/debug/deps/libcastaway-c4437c82b446af7d.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/internal.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/lifetime_free.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/utils.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/internal.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/lifetime_free.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/castaway-0.2.4/src/utils.rs:

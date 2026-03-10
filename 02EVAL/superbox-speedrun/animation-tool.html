@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superbox Animation Tool</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #111;
+  color: #ddd;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* TOOLBAR */
+#toolbar {
+  background: #1a1a1a;
+  border-bottom: 2px solid #F7931A;
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#toolbar h1 {
+  font-size: 13px;
+  font-weight: 900;
+  color: #F7931A;
+  letter-spacing: 2px;
+  margin-right: 4px;
+}
+.btn {
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 3px;
+  padding: 5px 11px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { background: #3a3a3a; color: #fff; }
+.btn.primary { background: #F7931A; color: #000; border-color: #F7931A; font-weight: 700; }
+.btn.primary:hover { background: #ffaa33; }
+.sep { width: 1px; height: 22px; background: #333; flex-shrink: 0; }
+
+/* LAYOUT */
+#app { flex: 1; display: flex; overflow: hidden; }
+
+/* SIDEBAR */
+#sidebar {
+  width: 192px;
+  background: #1a1a1a;
+  border-right: 1px solid #2a2a2a;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.s-section { border-bottom: 1px solid #222; padding: 10px; }
+.s-section h3 {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+/* LAYER BUTTONS */
+.layer-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-bottom: 3px;
+  border: 1.5px solid transparent;
+  transition: background 0.1s;
+}
+.layer-btn:hover { background: #252525; }
+.layer-btn.active { font-weight: 700; }
+.layer-dot { width: 9px; height: 9px; border-radius: 1px; flex-shrink: 0; }
+
+/* PRESETS */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+.preset-btn {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 3px;
+  padding: 5px 2px;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s;
+  line-height: 1;
+}
+.preset-btn:hover { background: #2a1a3a; border-color: #9B4AC2; }
+
+/* KEYFRAME LIST */
+.kf-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-bottom: 2px;
+  border: 1px solid #222;
+}
+.kf-item:hover { background: #222; }
+.kf-item.active { background: #1a2a3a; border-color: #4A8AC2; }
+.kf-num { font-size: 9px; color: #666; min-width: 16px; text-align: center; }
+.kf-label { flex: 1; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kf-del { font-size: 10px; color: #444; cursor: pointer; padding: 0 2px; }
+.kf-del:hover { color: #c44; }
+
+/* CANVAS */
+#canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  overflow: hidden;
+}
+#editor-svg { display: block; cursor: crosshair; }
+
+/* RIGHT PANEL */
+#rpanel {
+  width: 156px;
+  background: #1a1a1a;
+  border-left: 1px solid #2a2a2a;
+  padding: 10px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+#rpanel h3 {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #555;
+  margin-bottom: 6px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #666;
+  padding: 2px 0;
+}
+.info-val { color: #aaa; }
+.rp-group { display: flex; flex-direction: column; gap: 3px; }
+.hint {
+  font-size: 9px;
+  color: #444;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>◼ SUPERBOX ANIM</h1>
+  <div class="sep"></div>
+  <button class="btn" id="btn-add-kf">+ Keyframe</button>
+  <button class="btn" id="btn-dup-kf">Duplicate</button>
+  <button class="btn" id="btn-rename-kf">Rename</button>
+  <div class="sep"></div>
+  <button class="btn" id="btn-clear">Clear Grid</button>
+  <button class="btn" id="btn-invert">Invert</button>
+  <div class="sep"></div>
+  <button class="btn primary" id="btn-export">Export SVG</button>
+  <button class="btn" id="btn-export-all">Export All</button>
+  <div class="sep"></div>
+  <span style="font-size:9px;color:#444;">Linearity Move keyframe tool &mdash; output: SVG</span>
+</div>
+
+<div id="app">
+
+  <div id="sidebar">
+
+    <!-- LAYERS -->
+    <div class="s-section">
+      <h3>Layers</h3>
+      <div id="layer-body" class="layer-btn" onclick="setLayer('body')">
+        <div class="layer-dot" style="background:#2a2a2a;border:1px solid #888;"></div>
+        Body
+      </div>
+      <div id="layer-faceplate" class="layer-btn" onclick="setLayer('faceplate')">
+        <div class="layer-dot" style="background:#1A3A5C;border:1px solid #4A8AC2;"></div>
+        Faceplate
+      </div>
+      <div id="layer-face" class="layer-btn active" onclick="setLayer('face')">
+        <div class="layer-dot" style="background:#3A1A4A;border:1px solid #9B4AC2;"></div>
+        Face Anim
+      </div>
+      <div class="hint">
+        Body / Faceplate:<br>drag corner handles<br><br>
+        Face Anim:<br>LMB paint &nbsp; RMB erase<br>drag to fill
+      </div>
+    </div>
+
+    <!-- PRESETS -->
+    <div class="s-section">
+      <h3>Face Presets</h3>
+      <div class="preset-grid">
+        <div class="preset-btn" onclick="applyPreset('smile')"    title="Smile">&#128522;</div>
+        <div class="preset-btn" onclick="applyPreset('cool')"     title="Cool">&#128526;</div>
+        <div class="preset-btn" onclick="applyPreset('surprise')" title="Surprise">&#128558;</div>
+        <div class="preset-btn" onclick="applyPreset('sad')"      title="Sad">&#128546;</div>
+        <div class="preset-btn" onclick="applyPreset('squeeze')"  title="Squeeze">&#128547;</div>
+        <div class="preset-btn" onclick="applyPreset('wink')"     title="Wink">&#128521;</div>
+        <div class="preset-btn" onclick="applyPreset('closed')"   title="Closed">&#128564;</div>
+        <div class="preset-btn" onclick="applyPreset('look_l')"   title="Look Left">&#128064;&#8592;</div>
+        <div class="preset-btn" onclick="applyPreset('look_r')"   title="Look Right">&#128064;&#8594;</div>
+        <div class="preset-btn" onclick="applyPreset('dollar')"   title="Dollar face">$</div>
+        <div class="preset-btn" onclick="applyPreset('check')"    title="Checkmark">&#9989;</div>
+        <div class="preset-btn" onclick="applyPreset('blank')"    title="Blank / Clear">&#9647;</div>
+      </div>
+    </div>
+
+    <!-- KEYFRAMES -->
+    <div class="s-section" style="flex:1;">
+      <h3>Keyframes</h3>
+      <div id="kf-list"></div>
+    </div>
+
+  </div>
+
+  <div id="canvas-wrap">
+    <svg id="editor-svg" width="560" height="560" viewBox="0 0 560 560"></svg>
+  </div>
+
+  <div id="rpanel">
+
+    <div>
+      <h3>Info</h3>
+      <div class="info-row"><span>Layer</span><span class="info-val" id="info-layer">Face Anim</span></div>
+      <div class="info-row"><span>Frame</span><span class="info-val" id="info-kf">1 / 1</span></div>
+      <div class="info-row"><span>Pixels on</span><span class="info-val" id="info-pixels">0</span></div>
+    </div>
+
+    <div>
+      <h3>Shift Grid</h3>
+      <div class="rp-group">
+        <button class="btn" onclick="shiftGrid('up')">&#8593; Up</button>
+        <button class="btn" onclick="shiftGrid('down')">&#8595; Down</button>
+        <button class="btn" onclick="shiftGrid('left')">&#8592; Left</button>
+        <button class="btn" onclick="shiftGrid('right')">&#8594; Right</button>
+      </div>
+    </div>
+
+    <div>
+      <h3>Mirror</h3>
+      <div class="rp-group">
+        <button class="btn" onclick="mirrorGrid('h')">&#8596; Horizontal</button>
+        <button class="btn" onclick="mirrorGrid('v')">&#8597; Vertical</button>
+      </div>
+    </div>
+
+    <div>
+      <h3>Spec</h3>
+      <div class="hint">
+        Body: 4-pt SVG shape<br>
+        Faceplate: 4-pt SVG shape<br>
+        Face anim: 25&#215;25 grid<br>
+        mapped to faceplate<br><br>
+        SVG layers:<br>
+        &bull; #body<br>
+        &bull; #faceplate<br>
+        &bull; #face-animation
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS & CONFIG
+// ============================================================
+const GRID = 25;
+const SVG_W = 560, SVG_H = 560;
+
+const DEFAULT_BODY      = [[130,70],[430,70],[430,490],[130,490]];
+const DEFAULT_FACEPLATE = [[175,130],[385,130],[385,380],[175,380]];
+
+// ============================================================
+// STATE
+// ============================================================
+let activeLayer = 'face';
+let activeKF    = 0;
+let keyframes   = [newKF('idle')];
+let dragging    = null;   // { layer, idx }
+let isPainting  = false;
+let paintValue  = true;
+
+function newKF(label) {
+  return {
+    label,
+    body:      DEFAULT_BODY.map(p => [...p]),
+    faceplate: DEFAULT_FACEPLATE.map(p => [...p]),
+    grid:      Array.from({length: GRID}, () => new Array(GRID).fill(false)),
+  };
+}
+
+function kf() { return keyframes[activeKF]; }
+
+// ============================================================
+// PIXEL PRESETS  (row = Y, col = X; origin top-left)
+// ============================================================
+function makeGrid(fn) {
+  return Array.from({length: GRID}, (_, r) =>
+    Array.from({length: GRID}, (__, c) => fn(c, r))
+  );
+}
+
+const P = {};
+
+P.blank = makeGrid(() => false);
+
+P.smile = makeGrid((x, y) => {
+  if (x>=5&&x<=9 &&y>=7&&y<=10) return true;  // left eye
+  if (x>=15&&x<=19&&y>=7&&y<=10) return true;  // right eye
+  if (y===17&&x>=6&&x<=18)       return true;  // mouth bottom
+  if (y===16&&(x===6||x===18))   return true;  // mouth corners
+  return false;
+});
+
+P.cool = makeGrid((x, y) => {
+  // Left sunglass lens (filled rect with border feel)
+  if (x>=4&&x<=10&&y>=7&&y<=11) return true;
+  // Right sunglass lens
+  if (x>=14&&x<=20&&y>=7&&y<=11) return true;
+  // Bridge
+  if (y===9&&x>=11&&x<=13) return true;
+  // Top bar
+  if (y===6&&x>=4&&x<=20) return true;
+  // Smile
+  if (y===17&&x>=7&&x<=17) return true;
+  if (y===16&&(x===7||x===17)) return true;
+  return false;
+});
+
+P.surprise = makeGrid((x, y) => {
+  // Left eye wide open
+  if ((y>=6&&y<=11)&&(x>=5&&x<=10)) {
+    if (x===5||x===10||y===6||y===11) return true;
+  }
+  // Right eye wide open
+  if ((y>=6&&y<=11)&&(x>=14&&x<=19)) {
+    if (x===14||x===19||y===6||y===11) return true;
+  }
+  // O-mouth outline
+  const cx=12, cy=18, rx=3.5, ry=2.5;
+  const inOuter = ((x-cx)**2)/(rx**2)+((y-cy)**2)/(ry**2)<=1;
+  const inInner = ((x-cx)**2)/((rx-1.5)**2)+((y-cy)**2)/((ry-1)**2)<=1;
+  if (inOuter && !inInner) return true;
+  return false;
+});
+
+P.sad = makeGrid((x, y) => {
+  if (x>=6&&x<=10&&y>=8&&y<=11) return true;
+  if (x>=14&&x<=18&&y>=8&&y<=11) return true;
+  // Sad mouth — corners up
+  if (y===19&&x>=8&&x<=16)    return true;
+  if (y===18&&(x===7||x===17)) return true;
+  if (y===17&&(x===6||x===18)) return true;
+  return false;
+});
+
+P.squeeze = makeGrid((x, y) => {
+  if (y===9&&x>=5&&x<=11)  return true;  // left squint
+  if (y===9&&x>=13&&x<=19) return true;  // right squint
+  if (y===9&&x>=5&&x<=11&&(x===5||x===11)) return true;
+  // Grimace
+  if (y===17&&x>=7&&x<=17) return true;
+  if (y===18&&x>=7&&x<=17) return true;
+  if (y===18&&(x===9||x===11||x===13||x===15)) return false; // teeth gaps
+  return false;
+});
+
+P.wink = makeGrid((x, y) => {
+  if (x>=6&&x<=10&&y>=7&&y<=11)  return true;   // left eye open
+  if (y===9&&x>=14&&x<=18)       return true;   // right eye = line
+  if (y===17&&x>=7&&x<=17)       return true;   // smile
+  if (y===16&&(x===7||x===17))   return true;
+  return false;
+});
+
+P.closed = makeGrid((x, y) => {
+  if (y>=9&&y<=10&&x>=5&&x<=11)  return true;
+  if (y>=9&&y<=10&&x>=13&&x<=19) return true;
+  if (y===17&&x>=9&&x<=15)       return true;
+  return false;
+});
+
+P.look_l = makeGrid((x, y) => {
+  // Eye frames
+  if ((y>=7&&y<=12)&&(x>=4&&x<=11)&&(x===4||x===11||y===7||y===12)) return true;
+  if ((y>=7&&y<=12)&&(x>=13&&x<=20)&&(x===13||x===20||y===7||y===12)) return true;
+  // Pupils shifted left
+  if (x>=5&&x<=7&&y>=8&&y<=11)   return true;
+  if (x>=14&&x<=16&&y>=8&&y<=11) return true;
+  if (y===17&&x>=9&&x<=15) return true;
+  return false;
+});
+
+P.look_r = makeGrid((x, y) => {
+  if ((y>=7&&y<=12)&&(x>=4&&x<=11)&&(x===4||x===11||y===7||y===12)) return true;
+  if ((y>=7&&y<=12)&&(x>=13&&x<=20)&&(x===13||x===20||y===7||y===12)) return true;
+  // Pupils shifted right
+  if (x>=8&&x<=10&&y>=8&&y<=11)  return true;
+  if (x>=17&&x<=19&&y>=8&&y<=11) return true;
+  if (y===17&&x>=9&&x<=15) return true;
+  return false;
+});
+
+P.dollar = makeGrid((x, y) => {
+  const cx = 12;
+  // $ vertical bar
+  if (x===cx&&y>=3&&y<=21) return true;
+  // Top arc (upper C)
+  if (y>=5&&y<=10) {
+    if ((y===5||y===10)&&x>=cx&&x<=cx+5) return true;
+    if (x===cx+5&&y>=5&&y<=10)           return true;
+    if (y===8&&x>=cx-4&&x<=cx)           return true;
+    if (x===cx-4&&y>=5&&y<=8)            return true;
+    if (y===5&&x>=cx-4&&x<=cx)           return true;
+  }
+  // Bottom arc (lower C, mirrored)
+  if (y>=12&&y<=17) {
+    if ((y===12||y===17)&&x>=cx-5&&x<=cx) return true;
+    if (x===cx-5&&y>=12&&y<=17)           return true;
+    if (y===14&&x>=cx&&x<=cx+4)           return true;
+    if (x===cx+4&&y>=14&&y<=17)           return true;
+    if (y===17&&x>=cx&&x<=cx+4)           return true;
+  }
+  return false;
+});
+
+P.check = makeGrid((x, y) => {
+  // Big checkmark
+  if (x>=3&&x<=8&&y>=12&&y<=16) {
+    const slope = (y-16)/(x-3);
+    if (Math.abs(slope - 0.8) < 0.5) return true;
+  }
+  if (x>=7&&x<=21&&y>=3&&y<=16) {
+    const slope = (y-16)/(x-7);
+    if (Math.abs(slope + 0.87) < 0.4) return true;
+  }
+  return false;
+});
+
+// ============================================================
+// SVG HELPERS
+// ============================================================
+const ns = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs = {}) {
+  const e = document.createElementNS(ns, tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    // camelCase -> kebab-case for SVG presentation attrs
+    const attr = k.replace(/([A-Z])/g, m => '-' + m.toLowerCase());
+    e.setAttribute(attr, v);
+  }
+  return e;
+}
+
+function ptStr(pts) {
+  return pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+}
+
+// Bilinear interpolation within a quad [TL, TR, BR, BL]
+function blerp(pts, u, v) {
+  const top = [
+    pts[0][0] + (pts[1][0] - pts[0][0]) * u,
+    pts[0][1] + (pts[1][1] - pts[0][1]) * u,
+  ];
+  const bot = [
+    pts[3][0] + (pts[2][0] - pts[3][0]) * u,
+    pts[3][1] + (pts[2][1] - pts[3][1]) * u,
+  ];
+  return [
+    top[0] + (bot[0] - top[0]) * v,
+    top[1] + (bot[1] - top[1]) * v,
+  ];
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const svg = document.getElementById('editor-svg');
+
+function render() {
+  svg.innerHTML = '';
+  const f = kf();
+
+  // Background
+  svg.appendChild(svgEl('rect', {x:0, y:0, width:SVG_W, height:SVG_H, fill:'#0a0a0a'}));
+
+  // Subtle reference grid
+  for (let i = 0; i <= SVG_W; i += 40)
+    svg.appendChild(svgEl('line', {x1:i, y1:0, x2:i, y2:SVG_H, stroke:'#141414', strokeWidth:1}));
+  for (let j = 0; j <= SVG_H; j += 40)
+    svg.appendChild(svgEl('line', {x1:0, y1:j, x2:SVG_W, y2:j, stroke:'#141414', strokeWidth:1}));
+
+  // === BODY ===
+  svg.appendChild(svgEl('polygon', {
+    points: ptStr(f.body),
+    fill: '#1e1e1e',
+    stroke: activeLayer === 'body' ? '#ccc' : '#555',
+    strokeWidth: activeLayer === 'body' ? 2 : 1.5,
+  }));
+
+  // === FACEPLATE ===
+  svg.appendChild(svgEl('polygon', {
+    points: ptStr(f.faceplate),
+    fill: '#1A3A5C',
+    stroke: activeLayer === 'faceplate' ? '#8BC4FF' : '#4A8AC2',
+    strokeWidth: activeLayer === 'faceplate' ? 2 : 1.5,
+    fillOpacity: 0.75,
+  }));
+
+  // === FACE GRID ===
+  const fgGroup = svgEl('g');
+  if (activeLayer === 'face') {
+    // Show full 25x25 grid with painted cells highlighted
+    for (let row = 0; row < GRID; row++) {
+      for (let col = 0; col < GRID; col++) {
+        const on = f.grid[row][col];
+        const tl = blerp(f.faceplate,  col    / GRID,  row      / GRID);
+        const tr = blerp(f.faceplate, (col+1) / GRID,  row      / GRID);
+        const br = blerp(f.faceplate, (col+1) / GRID, (row+1)  / GRID);
+        const bl = blerp(f.faceplate,  col    / GRID, (row+1)  / GRID);
+        fgGroup.appendChild(svgEl('polygon', {
+          points: ptStr([tl, tr, br, bl]),
+          fill:   on ? '#D08BFF' : '#130a1e',
+          stroke: '#1e0f2e',
+          strokeWidth: 0.4,
+          'data-row': row,
+          'data-col': col,
+        }));
+      }
+    }
+  } else {
+    // Only show active pixels, no grid overlay
+    for (let row = 0; row < GRID; row++) {
+      for (let col = 0; col < GRID; col++) {
+        if (!f.grid[row][col]) continue;
+        const tl = blerp(f.faceplate,  col    / GRID,  row      / GRID);
+        const tr = blerp(f.faceplate, (col+1) / GRID,  row      / GRID);
+        const br = blerp(f.faceplate, (col+1) / GRID, (row+1)  / GRID);
+        const bl = blerp(f.faceplate,  col    / GRID, (row+1)  / GRID);
+        fgGroup.appendChild(svgEl('polygon', {
+          points: ptStr([tl, tr, br, bl]),
+          fill: '#9B4AC2',
+          opacity: 0.9,
+        }));
+      }
+    }
+  }
+  svg.appendChild(fgGroup);
+
+  // === CORNER HANDLES ===
+  const hg = svgEl('g');
+  const drawHandles = (pts, layer) => {
+    const isActive = activeLayer === layer;
+    const colors = {
+      body:      { fill: '#aaa', stroke: '#888' },
+      faceplate: { fill: '#4A8AC2', stroke: '#8BC4FF' },
+    };
+    const c = colors[layer];
+    pts.forEach((p, i) => {
+      hg.appendChild(svgEl('circle', {
+        cx: p[0], cy: p[1],
+        r:  isActive ? 7 : 4,
+        fill:        isActive ? c.fill   : '#333',
+        stroke:      isActive ? c.stroke : '#555',
+        strokeWidth: 1.5,
+        opacity:     isActive ? 1 : 0.6,
+        'data-layer': layer,
+        'data-idx':   i,
+        cursor: 'grab',
+      }));
+    });
+  };
+  drawHandles(f.body, 'body');
+  drawHandles(f.faceplate, 'faceplate');
+  svg.appendChild(hg);
+
+  updateInfo();
+}
+
+// ============================================================
+// INTERACTION
+// ============================================================
+function svgXY(e) {
+  const r = svg.getBoundingClientRect();
+  return [
+    (e.clientX - r.left)  * (SVG_W / r.width),
+    (e.clientY - r.top)   * (SVG_H / r.height),
+  ];
+}
+
+// Find closest grid cell (brute-force cell center search)
+function hitCell(sx, sy) {
+  const fp = kf().faceplate;
+  let bestRow = -1, bestCol = -1, bestD = Infinity;
+  for (let row = 0; row < GRID; row++) {
+    for (let col = 0; col < GRID; col++) {
+      const [cx, cy] = blerp(fp, (col + 0.5) / GRID, (row + 0.5) / GRID);
+      const d = (cx - sx) ** 2 + (cy - sy) ** 2;
+      if (d < bestD) { bestD = d; bestRow = row; bestCol = col; }
+    }
+  }
+  return [bestRow, bestCol];
+}
+
+svg.addEventListener('mousedown', e => {
+  e.preventDefault();
+  const [x, y] = svgXY(e);
+  const dataLayer = e.target.getAttribute('data-layer');
+  const dataIdx   = e.target.getAttribute('data-idx');
+
+  if (dataLayer && dataIdx !== null) {
+    dragging = { layer: dataLayer, idx: parseInt(dataIdx) };
+    svg.style.cursor = 'grabbing';
+    return;
+  }
+
+  if (activeLayer === 'face') {
+    isPainting = true;
+    paintValue = (e.button !== 2);
+    const [row, col] = hitCell(x, y);
+    if (row >= 0) { kf().grid[row][col] = paintValue; render(); }
+  }
+});
+
+svg.addEventListener('mousemove', e => {
+  if (!dragging && !isPainting) return;
+  const [x, y] = svgXY(e);
+
+  if (dragging) {
+    const pts = dragging.layer === 'body' ? kf().body : kf().faceplate;
+    pts[dragging.idx] = [x, y];
+    render();
+    return;
+  }
+
+  if (isPainting && activeLayer === 'face') {
+    const [row, col] = hitCell(x, y);
+    if (row >= 0 && kf().grid[row][col] !== paintValue) {
+      kf().grid[row][col] = paintValue;
+      render();
+    }
+  }
+});
+
+const endDrag = () => {
+  dragging = null; isPainting = false;
+  svg.style.cursor = 'crosshair';
+};
+svg.addEventListener('mouseup',    endDrag);
+svg.addEventListener('mouseleave', endDrag);
+svg.addEventListener('contextmenu', e => e.preventDefault());
+
+// ============================================================
+// LAYER
+// ============================================================
+function setLayer(layer) {
+  activeLayer = layer;
+  ['body','faceplate','face'].forEach(l => {
+    document.getElementById('layer-' + l).classList.toggle('active', l === layer);
+  });
+  render();
+}
+
+// ============================================================
+// PRESETS
+// ============================================================
+function applyPreset(name) {
+  const preset = P[name];
+  if (!preset) return;
+  kf().grid = preset.map(row => [...row]);
+  render();
+}
+
+// ============================================================
+// GRID TOOLS
+// ============================================================
+function shiftGrid(dir) {
+  const g = kf().grid;
+  const n = Array.from({length: GRID}, () => new Array(GRID).fill(false));
+  for (let r = 0; r < GRID; r++) {
+    for (let c = 0; c < GRID; c++) {
+      if (!g[r][c]) continue;
+      const nr = dir === 'up' ? r-1 : dir === 'down' ? r+1 : r;
+      const nc = dir === 'left' ? c-1 : dir === 'right' ? c+1 : c;
+      if (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID) n[nr][nc] = true;
+    }
+  }
+  kf().grid = n; render();
+}
+
+function mirrorGrid(axis) {
+  const g = kf().grid;
+  if (axis === 'h') {
+    kf().grid = g.map(row => [...row].reverse());
+  } else {
+    kf().grid = [...g].reverse().map(row => [...row]);
+  }
+  render();
+}
+
+// ============================================================
+// KEYFRAMES
+// ============================================================
+function renderKFList() {
+  const list = document.getElementById('kf-list');
+  list.innerHTML = '';
+  keyframes.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'kf-item' + (i === activeKF ? ' active' : '');
+    item.innerHTML = `
+      <span class="kf-num">${i + 1}</span>
+      <span class="kf-label">${f.label}</span>
+      <span class="kf-del" data-i="${i}">&#10005;</span>
+    `;
+    item.querySelector('.kf-label').addEventListener('click', () => {
+      activeKF = i; render(); renderKFList();
+    });
+    item.querySelector('.kf-del').addEventListener('click', e => {
+      e.stopPropagation(); deleteKF(i);
+    });
+    list.appendChild(item);
+  });
+}
+
+function addKF() {
+  const label = prompt('Keyframe name:', `frame_${keyframes.length + 1}`) || `frame_${keyframes.length + 1}`;
+  keyframes.push(newKF(label));
+  activeKF = keyframes.length - 1;
+  render(); renderKFList();
+}
+
+function dupKF() {
+  const src = kf();
+  const label = prompt('New name:', src.label + '_copy') || src.label + '_copy';
+  keyframes.push({
+    label,
+    body:      src.body.map(p => [...p]),
+    faceplate: src.faceplate.map(p => [...p]),
+    grid:      src.grid.map(row => [...row]),
+  });
+  activeKF = keyframes.length - 1;
+  render(); renderKFList();
+}
+
+function deleteKF(i) {
+  if (keyframes.length <= 1) return;
+  keyframes.splice(i, 1);
+  if (activeKF >= keyframes.length) activeKF = keyframes.length - 1;
+  render(); renderKFList();
+}
+
+function renameKF() {
+  const name = prompt('Rename:', kf().label);
+  if (name) { kf().label = name; renderKFList(); }
+}
+
+// ============================================================
+// SVG EXPORT
+// ============================================================
+function buildSVG(frame) {
+  const f = frame;
+  const lines = [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="560" height="560" viewBox="0 0 560 560">`,
+    `  <title>Superbox — ${f.label}</title>`,
+    ``,
+    `  <!-- BODY (4-point shape, lowest z-axis) -->`,
+    `  <g id="body">`,
+    `    <polygon points="${ptStr(f.body)}" fill="#222222" stroke="#888888" stroke-width="1.5"/>`,
+    `  </g>`,
+    ``,
+    `  <!-- FACEPLATE (4-point shape, middle z-axis) -->`,
+    `  <g id="faceplate">`,
+    `    <polygon points="${ptStr(f.faceplate)}" fill="#1A3A5C" stroke="#4A8AC2" stroke-width="1.5"/>`,
+    `  </g>`,
+    ``,
+    `  <!-- FACE ANIMATION LAYER (25x25 grid, top z-axis) -->`,
+    `  <g id="face-animation">`,
+  ];
+
+  for (let row = 0; row < GRID; row++) {
+    for (let col = 0; col < GRID; col++) {
+      if (!f.grid[row][col]) continue;
+      const tl = blerp(f.faceplate,  col    / GRID,  row      / GRID);
+      const tr = blerp(f.faceplate, (col+1) / GRID,  row      / GRID);
+      const br = blerp(f.faceplate, (col+1) / GRID, (row+1)  / GRID);
+      const bl = blerp(f.faceplate,  col    / GRID, (row+1)  / GRID);
+      const pts = [tl, tr, br, bl].map(p => p.map(n => n.toFixed(2)).join(',')).join(' ');
+      lines.push(`    <polygon id="px_${row}_${col}" points="${pts}" fill="#D08BFF"/>`);
+    }
+  }
+
+  lines.push(`  </g>`, `</svg>`);
+  return lines.join('\n');
+}
+
+function download(content, filename) {
+  const blob = new Blob([content], {type: 'image/svg+xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportCurrent() {
+  const f = kf();
+  download(buildSVG(f), `superbox_${f.label.replace(/\s+/g, '_')}.svg`);
+}
+
+function exportAll() {
+  keyframes.forEach((f, i) => {
+    setTimeout(() => {
+      const num = String(i + 1).padStart(2, '0');
+      download(buildSVG(f), `superbox_kf${num}_${f.label.replace(/\s+/g, '_')}.svg`);
+    }, i * 250);
+  });
+}
+
+// ============================================================
+// INFO PANEL
+// ============================================================
+function updateInfo() {
+  const names = {body: 'Body', faceplate: 'Faceplate', face: 'Face Anim'};
+  document.getElementById('info-layer').textContent   = names[activeLayer];
+  document.getElementById('info-kf').textContent      = `${activeKF + 1} / ${keyframes.length}`;
+  document.getElementById('info-pixels').textContent  = kf().grid.flat().filter(Boolean).length;
+}
+
+// ============================================================
+// TOOLBAR WIRING
+// ============================================================
+document.getElementById('btn-add-kf').onclick    = addKF;
+document.getElementById('btn-dup-kf').onclick    = dupKF;
+document.getElementById('btn-rename-kf').onclick = renameKF;
+document.getElementById('btn-clear').onclick     = () => {
+  kf().grid = Array.from({length: GRID}, () => new Array(GRID).fill(false));
+  render();
+};
+document.getElementById('btn-invert').onclick    = () => {
+  kf().grid = kf().grid.map(row => row.map(v => !v));
+  render();
+};
+document.getElementById('btn-export').onclick     = exportCurrent;
+document.getElementById('btn-export-all').onclick = exportAll;
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+renderKFList();
+</script>
+</body>
+</html>

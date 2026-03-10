@@ -1,0 +1,21 @@
+ValueWithType<'_, BTreeMap<spacetimedb::AlgebraicValue, spacetimedb::AlgebraicValue>>
+ValueWithType<'_, spacetimedb::AlgebraicValue>
+decorum::proxy::ConstrainedFloat<f32, decorum::constraint::UnitConstraint<f32>>
+decorum::proxy::ConstrainedFloat<f64, decorum::constraint::UnitConstraint<f64>>
+spacetimedb::spacetimedb_lib::AlgebraicType
+spacetimedb::spacetimedb_lib::Hash
+spacetimedb::spacetimedb_lib::ProductType
+spacetimedb::spacetimedb_lib::ProductTypeElement
+spacetimedb::spacetimedb_lib::SumType
+spacetimedb::spacetimedb_lib::TypeAlias
+spacetimedb::spacetimedb_lib::filter::Cmp
+spacetimedb::spacetimedb_lib::filter::Logic
+spacetimedb::spacetimedb_lib::filter::Unary
+spacetimedb::spacetimedb_sats::db::def::IndexType
+spacetimedb_primitives::attr::Constraints
+spacetimedb_primitives::col_list::ColList
+spacetimedb_primitives::ids::ColId
+spacetimedb_primitives::ids::IndexId
+spacetimedb_primitives::ids::SequenceId
+(&ReducerContext, std::string::String, u64, std::string::String)
+(&ReducerContext, std::string::String, std::string::String)

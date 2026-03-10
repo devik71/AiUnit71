@@ -14,6 +14,14 @@ export interface ChatRequest {
   maxTokens?: number;
   /** Override: "ollama" | "openrouter" | "openai" | "anthropic" | "google" */
   provider?: string;
+  tools?: Array<{
+    type: "function";
+    function: {
+      name: string;
+      description?: string;
+      parameters: Record<string, unknown>;
+    };
+  }>;
 }
 
 export interface ChatResponse {
@@ -26,6 +34,14 @@ export interface ChatResponse {
   };
   finishReason: string;
   latencyMs: number;
+  tool_calls?: Array<{
+    id: string;
+    type: "function";
+    function: {
+      name: string;
+      arguments: string; // JSON string
+    };
+  }>;
 }
 
 export interface LlmClientConfig {
@@ -123,7 +139,7 @@ export class LlmClient {
     request: ChatRequest,
     startTime: number
   ): Promise<ChatResponse> {
-    const body = {
+    const body: Record<string, any> = {
       model: request.model,
       messages: request.messages,
       stream: false,
@@ -132,6 +148,10 @@ export class LlmClient {
         num_predict: request.maxTokens ?? 4096,
       },
     };
+
+    if (request.tools && request.tools.length > 0) {
+      body.tools = request.tools;
+    }
 
     const raw = await this.fetchWithRetry(
       `${this.ollamaBase}/api/chat`,
@@ -145,6 +165,15 @@ export class LlmClient {
     const data = await raw.json() as Record<string, any>;
     const latencyMs = Date.now() - startTime;
 
+    const toolCalls = data.message?.tool_calls?.map((tc: any, i: number) => ({
+      id: `call_${i}`,
+      type: "function",
+      function: {
+        name: tc.function.name,
+        arguments: JSON.stringify(tc.function.arguments),
+      }
+    }));
+
     return {
       content: data.message?.content ?? "",
       model: data.model ?? request.model,
@@ -155,6 +184,7 @@ export class LlmClient {
       },
       finishReason: data.done_reason ?? "stop",
       latencyMs,
+      tool_calls: toolCalls && toolCalls.length > 0 ? toolCalls : undefined,
     };
   }
 
@@ -170,12 +200,16 @@ export class LlmClient {
       );
     }
 
-    const body = {
+    const body: Record<string, any> = {
       model: request.model,
       messages: request.messages,
       temperature: request.temperature ?? 0.7,
       max_tokens: request.maxTokens ?? 4096,
     };
+
+    if (request.tools && request.tools.length > 0) {
+      body.tools = request.tools;
+    }
 
     const raw = await this.fetchWithRetry(
       `${this.openrouterBase}/chat/completions`,
@@ -197,6 +231,15 @@ export class LlmClient {
     const choice = data.choices?.[0];
     const usage = data.usage ?? {};
 
+    const toolCalls = choice?.message?.tool_calls?.map((tc: any) => ({
+      id: tc.id,
+      type: "function",
+      function: {
+        name: tc.function.name,
+        arguments: tc.function.arguments,
+      }
+    }));
+
     return {
       content: choice?.message?.content ?? "",
       model: data.model ?? request.model,
@@ -207,6 +250,7 @@ export class LlmClient {
       },
       finishReason: choice?.finish_reason ?? "stop",
       latencyMs,
+      tool_calls: toolCalls && toolCalls.length > 0 ? toolCalls : undefined,
     };
   }
 

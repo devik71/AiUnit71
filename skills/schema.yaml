@@ -1,0 +1,88 @@
+# AiUnit71 Skill Frontmatter Schema
+# This schema defines the required and optional fields for the YAML frontmatter of any SKILL.md file.
+
+type: object
+required:
+  - name
+  - type
+  - version
+  - description
+  - capabilities
+  - mcp_integration
+properties:
+  name:
+    type: string
+    description: Unique identifier for the skill (kebab-case)
+  type:
+    type: string
+    description: Category of the skill (e.g., intelligence, creative, operational)
+  color:
+    type: string
+    description: Hex color code for UI representation
+  version:
+    type: string
+    description: Semantic version of the skill
+  priority:
+    type: string
+    enum: [low, medium, high, critical]
+  description:
+    type: string
+    description: What the skill does and when to use it
+  capabilities:
+    type: array
+    items:
+      type: string
+  modes:
+    type: object
+    additionalProperties:
+      type: string
+      description: Description of the mode
+  depends_on:
+    type: array
+    items:
+      type: string
+  blocks:
+    type: array
+    items:
+      type: string
+  rooms:
+    type: array
+    items:
+      type: string
+  agents:
+    type: array
+    items:
+      type: string
+  mcp_integration:
+    type: object
+    description: "REQUIRED (P0): MCP Tool integration specification to prevent pipeline gaps."
+    required:
+      - status
+    properties:
+      status:
+        type: string
+        enum: [IMPLEMENTED, P0_MISSING, NOT_APPLICABLE]
+      required_tools:
+        type: array
+        items:
+          type: object
+          properties:
+            tool:
+              type: string
+            action:
+              type: string
+            key:
+              type: string
+            description:
+              type: string
+      namespace:
+        type: string
+      note:
+        type: string
+  hooks:
+    type: object
+    properties:
+      pre:
+        type: string
+      post:
+        type: string

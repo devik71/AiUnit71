@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AiUnit71 × Escobar Coffee — Комерційна пропозиція</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --espresso: #1A0F0A;
+      --dark: #2C1A10;
+      --copper: #C87941;
+      --copper-light: rgba(200, 121, 65, 0.15);
+      --cream: #F5F0E8;
+      --cream-dark: #EDE7DB;
+      --text: #1A0F0A;
+      --muted: #7A6558;
+      --line: 1px solid rgba(26,15,10,0.1);
+      --line-strong: 1px solid rgba(26,15,10,0.18);
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+
+    /* ─── HEADER ──────────────────────────────────────── */
+    header {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 20px 0;
+    }
+
+    header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-brand {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    .nav-meta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(245,240,232,0.45);
+      letter-spacing: 0.08em;
+    }
+
+    /* ─── HERO ────────────────────────────────────────── */
+    .hero {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 96px 0 80px;
+    }
+
+    .hero-eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 36px;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5.5vw, 62px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      max-width: 780px;
+      margin-bottom: 32px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--copper);
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: rgba(245,240,232,0.65);
+      max-width: 540px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .hero-sub strong {
+      color: var(--cream);
+      font-weight: 400;
+    }
+
+    .hero-divider {
+      border: none;
+      border-top: 1px solid rgba(245,240,232,0.12);
+      margin: 56px 0;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+
+    .kpi {
+      padding: 0 32px 0 0;
+      border-right: 1px solid rgba(245,240,232,0.12);
+    }
+
+    .kpi:first-child { padding-left: 0; }
+    .kpi:last-child { border-right: none; }
+
+    .kpi-num {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--copper);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: rgba(245,240,232,0.5);
+      line-height: 1.4;
+      font-weight: 300;
+    }
+
+    /* ─── SECTIONS ────────────────────────────────────── */
+    section {
+      padding: 80px 0;
+      border-bottom: var(--line-strong);
+    }
+
+    section:last-of-type { border-bottom: none; }
+
+    .section-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+
+    .section-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      color: var(--copper);
+      text-transform: uppercase;
+    }
+
+    .section-title-sm {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .section-eyebrow::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line-strong);
+    }
+
+    /* ─── ANALYSIS ────────────────────────────────────── */
+    .analysis-banner {
+      background: var(--copper-light);
+      border: 1px solid rgba(200,121,65,0.25);
+      padding: 32px 40px;
+      margin-bottom: 48px;
+    }
+
+    .analysis-banner p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--dark);
+    }
+
+    .analysis-banner strong { color: var(--espresso); font-weight: 600; }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .insight-card {
+      background: white;
+      border: var(--line-strong);
+      padding: 32px;
+    }
+
+    .insight-card-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .insight-card h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .insight-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+    }
+
+    .insight-card p strong { color: var(--text); font-weight: 500; }
+
+    /* ─── PROBLEM ─────────────────────────────────────── */
+    .problem-list { display: flex; flex-direction: column; gap: 0; }
+
+    .problem-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 32px;
+      padding: 36px 0;
+      border-bottom: var(--line);
+      align-items: start;
+    }
+
+    .problem-item:last-child { border-bottom: none; }
+
+    .problem-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--copper);
+      letter-spacing: 0.1em;
+      padding-top: 3px;
+    }
+
+    .problem-content h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .problem-content p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+      max-width: 480px;
+    }
+
+    .problem-content p strong { color: var(--text); font-weight: 500; }
+
+    .problem-tag {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--copper);
+      background: var(--copper-light);
+      border: 1px solid rgba(200,121,65,0.2);
+      padding: 4px 10px;
+      white-space: nowrap;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    /* ─── SOLUTION ────────────────────────────────────── */
+    .solution-intro {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 600px;
+      margin-bottom: 48px;
+    }
+
+    .solution-intro strong { color: var(--text); font-weight: 600; }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--cream-dark);
+      border: var(--line-strong);
+      margin-bottom: 2px;
+    }
+
+    .module {
+      background: var(--cream);
+      padding: 40px 36px;
+    }
+
+    .module-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .module-num-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      color: var(--copper);
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .module h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+
+    .module p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+      margin-bottom: 24px;
+    }
+
+    .module-replaces {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+
+    .module-replaces span {
+      text-decoration: line-through;
+      color: rgba(122,101,88,0.5);
+    }
+
+    .module-replaces strong { color: var(--copper); font-weight: 500; }
+
+    .module-result {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--espresso);
+      background: var(--copper-light);
+      border: 1px solid rgba(200,121,65,0.3);
+      padding: 7px 14px;
+    }
+
+    .module-result::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--copper);
+      flex-shrink: 0;
+    }
+
+    /* ─── STACK COMPARISON ────────────────────────────── */
+    .compare-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--cream-dark);
+      border: var(--line-strong);
+    }
+
+    .compare-col { background: var(--cream); padding: 36px; }
+
+    .compare-col-head {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: var(--line-strong);
+    }
+
+    .compare-col-head.current { color: var(--muted); }
+    .compare-col-head.aiunit { color: var(--copper); }
+
+    .compare-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: var(--line);
+      font-size: 13px;
+    }
+
+    .compare-item:last-child { border-bottom: none; }
+
+    .compare-item-name { color: var(--muted); font-weight: 300; }
+    .compare-item-cost { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+
+    .compare-col.current .compare-item-cost { color: var(--muted); }
+    .compare-col.aiunit .compare-item-cost { color: var(--copper); font-weight: 500; }
+
+    .compare-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 2px solid var(--espresso);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .compare-total .total-val {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .compare-col.current .total-val { color: var(--muted); }
+    .compare-col.aiunit .total-val { color: var(--copper); }
+
+    /* ─── HOW IT WORKS ────────────────────────────────── */
+    .pipeline {
+      position: relative;
+      padding-left: 40px;
+      border-left: 2px solid var(--copper-light);
+    }
+
+    .step {
+      position: relative;
+      padding: 0 0 40px 40px;
+    }
+
+    .step:last-child { padding-bottom: 0; }
+
+    .step::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 6px;
+      width: 12px;
+      height: 12px;
+      background: var(--copper);
+      border: 2px solid var(--cream);
+      outline: 1px solid var(--copper);
+    }
+
+    .step-actor {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+      max-width: 520px;
+    }
+
+    .step p strong { color: var(--text); font-weight: 500; }
+
+    /* ─── ROADMAP ─────────────────────────────────────── */
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--cream-dark);
+      border: var(--line-strong);
+    }
+
+    .roadmap-phase { background: var(--cream); padding: 36px 28px; }
+
+    .phase-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .phase-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .phase-timeline {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-weight: 300;
+    }
+
+    .phase-items { display: flex; flex-direction: column; gap: 10px; }
+
+    .phase-item {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .phase-item::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--copper);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .phase-item span { color: var(--muted); font-weight: 300; }
+    .phase-item strong { color: var(--text); font-weight: 500; }
+
+    /* ─── PILOT ───────────────────────────────────────── */
+    .pilot-container {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 56px;
+      position: relative;
+    }
+
+    .pilot-container::before {
+      content: 'ПІЛОТНИЙ ПРОЄКТ';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--copper);
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      font-weight: 500;
+      color: var(--espresso);
+      padding: 8px;
+    }
+
+    .pilot-container { padding-top: 80px; }
+
+    .pilot-container h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      max-width: 600px;
+      line-height: 1.2;
+    }
+
+    .pilot-container p {
+      font-size: 14px;
+      color: rgba(245,240,232,0.65);
+      line-height: 1.7;
+      font-weight: 300;
+      max-width: 560px;
+      margin-bottom: 14px;
+    }
+
+    .pilot-container p strong { color: var(--cream); font-weight: 500; }
+
+    .pilot-deliverables {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .pilot-deliverable {
+      display: flex;
+      gap: 14px;
+      font-size: 13px;
+      align-items: flex-start;
+    }
+
+    .pilot-deliverable::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--copper);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .pilot-deliverable span { color: rgba(245,240,232,0.5); font-weight: 300; line-height: 1.5; }
+    .pilot-deliverable strong { color: var(--cream); font-weight: 500; }
+
+    /* ─── CLOSING ─────────────────────────────────────── */
+    .closing-section {
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 100px 0 80px;
+    }
+
+    .closing-statement {
+      font-size: clamp(26px, 4vw, 48px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      max-width: 680px;
+      margin-bottom: 56px;
+    }
+
+    .closing-statement em { font-style: normal; color: var(--copper); }
+
+    .closing-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-top: 1px solid rgba(245,240,232,0.12);
+      padding-top: 40px;
+    }
+
+    .closing-block { padding-right: 32px; }
+
+    .closing-block .cl-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.35);
+      margin-bottom: 8px;
+    }
+
+    .closing-block .cl-value {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--cream);
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────── */
+    footer {
+      background: var(--dark);
+      padding: 20px 0;
+    }
+
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-brand {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(245,240,232,0.3);
+    }
+
+    .footer-doc {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: rgba(245,240,232,0.18);
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 768px) {
+      .container { padding: 0 20px; }
+      .hero { padding: 60px 0 56px; }
+      .kpi-row { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .kpi { border-right: none; padding: 0; }
+      .insight-grid { grid-template-columns: 1fr; }
+      .problem-item { grid-template-columns: 48px 1fr; gap: 16px; }
+      .problem-tag { display: none; }
+      .module-grid { grid-template-columns: 1fr; }
+      .compare-wrap { grid-template-columns: 1fr; }
+      .roadmap-grid { grid-template-columns: 1fr; }
+      .pilot-deliverables { grid-template-columns: 1fr; }
+      .closing-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <div class="nav-brand">AIUNIT71</div>
+      <div class="nav-meta mono">КП-002 // ESCOBAR COFFEE // 2026</div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-eyebrow">— Комерційна пропозиція</div>
+      <h1>У вас є стратегія.<br>Нам потрібен <em>один тиждень</em><br>щоб вона запрацювала.</h1>
+      <p class="hero-sub">
+        Escobar Coffee вже знає, що треба автоматизувати — продажі, контент,
+        ліди, репортинг. <strong>Питання не «що», а «чим і за скільки».</strong>
+        Ми замінюємо стек з 9 інструментів одним AI-шаром.
+      </p>
+
+      <hr class="hero-divider">
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-num">9→1</div>
+          <div class="kpi-label">Інструментів замінює AiUnit71</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num">$200</div>
+          <div class="kpi-label">Ваш поточний план витрат / міс</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num">17+</div>
+          <div class="kpi-label">Сортів кави без описів на сайті</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num">24/7</div>
+          <div class="kpi-label">Контент і ліди — без вихідних</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 ANALYSIS -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">01</span>
+        <span class="section-title-sm">Ми прочитали вашу стратегію</span>
+      </div>
+
+      <div class="analysis-banner">
+        <p>
+          Ви вже провели роботу: описали проблеми, обрали інструменти, склали роадмап на 6 місяців.
+          <strong>Це рідкість і це вагома перевага.</strong> Більшість бізнесів автоматизують навмання.
+          Ви знаєте, що хочете — чат-бот, CRM, контент-машину, лідогенерацію, аналітику.
+          Ми не переконуємо вас у необхідності автоматизації. Ми пропонуємо конкретний шлях реалізації.
+        </p>
+      </div>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-card-label">Що ви правильно визначили</div>
+          <h4>Контент — найбільший операційний ризик</h4>
+          <p>
+            Залежність від конкретних людей для SMM, описів товарів і SEO-статей —
+            це точка відмови. <strong>Один хворий / звільнений / перевантажений
+            співробітник зупиняє весь маркетинговий потік.</strong>
+          </p>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card-label">Що потребує уточнення</div>
+          <h4>9 окремих інструментів = 9 точок інтеграції</h4>
+          <p>
+            Ваш план: ChatGPT + Jasper + Buffer + Mailchimp + Apify + Clay + Surfer + Heygen + Make.com.
+            <strong>Кожна інтеграція — час, баги, нові підписки.</strong>
+            І жодна з них не знає голос Escobar.
+          </p>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card-label">Де найшвидший ROI</div>
+          <h4>17+ сортів без SEO-описів — гроші на столі</h4>
+          <p>
+            Кожна карточка кави без правильного опису — це втрачений органічний трафік.
+            <strong>За 1 день AiUnit71 генерує всі описи в TOV Escobar</strong>
+            із смаковими профілями, способами заварювання, SEO-ключами.
+          </p>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card-label">Де прихований ризик</div>
+          <h4>AI-контент без голосу бренду = spam</h4>
+          <p>
+            Jasper і ChatGPT генерують — але не знають Escobar.
+            <strong>Без TOV-замка кожен пост звучить як усі інші кав'ярні.</strong>
+            AiUnit71 навчається на вашому голосі і не відступає від нього.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 PROBLEM -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">02</span>
+        <span class="section-title-sm">Три блокери зараз</span>
+      </div>
+
+      <div class="problem-list">
+        <div class="problem-item">
+          <div class="problem-num mono">P-01</div>
+          <div class="problem-content">
+            <h3>Контент зупиняється без людини</h3>
+            <p>
+              SMM, описи товарів, SEO, підписи — все тримається на ручній праці.
+              <strong>Коли людина зайнята клієнтом — контент стоїть.</strong>
+              Коли контент стоїть — охоплення падає. Коли охоплення падає —
+              ліди не приходять з органіки.
+            </p>
+          </div>
+          <div class="problem-tag">БЛОКЕР Q1</div>
+        </div>
+
+        <div class="problem-item">
+          <div class="problem-num mono">P-02</div>
+          <div class="problem-content">
+            <h3>B2B-лідогенерація — ручна і нерегулярна</h3>
+            <p>
+              Ви знаєте, що треба парсити Google Maps, LinkedIn, Instagram.
+              <strong>Але без систематичного процесу — це відбувається раз на місяць,
+              якщо взагалі відбувається.</strong> А 50 релевантних лідів на тиждень
+              менеджеру не потрапляє ніколи.
+            </p>
+          </div>
+          <div class="problem-tag">БЛОКЕР Q1-Q2</div>
+        </div>
+
+        <div class="problem-item">
+          <div class="problem-num mono">P-03</div>
+          <div class="problem-content">
+            <h3>Звітність — ручна, раз на місяць, запізніла</h3>
+            <p>
+              Аналітика продажів, конверсії, ефективність каналів — це ручне
+              зведення таблиць. <strong>Рішення приймаються на основі
+              минулого місяця,</strong> не поточного тижня.
+              Без автозвіту — управління наосліп.
+            </p>
+          </div>
+          <div class="problem-tag">БЛОКЕР Q2</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 SOLUTION -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">03</span>
+        <span class="section-title-sm">Що робить AiUnit71</span>
+      </div>
+
+      <p class="solution-intro">
+        Один AI-шар замість дев'яти інструментів.
+        <strong>Кожен модуль знає голос Escobar, кожен вивід перевіряється
+        перед тим, як потрапити до людини.</strong>
+      </p>
+
+      <div class="module-grid">
+        <div class="module">
+          <div class="module-num-badge">MODULE 01</div>
+          <h3>Content Engine — Весь контент в голосі Escobar</h3>
+          <p>
+            Instagram підписи, LinkedIn-пости, описи 17+ сортів кави, SEO-статті для B2B.
+            TOV-документ Escobar стає системним промптом — жоден вивід не звучить як генерик.
+            Антислоп-фільтр відхиляє корпоративний AI-текст автоматично.
+          </p>
+          <div class="module-replaces">Замінює: <span>Jasper AI $48 + ChatGPT Plus $20 + Buffer $18</span></div>
+          <div class="module-result">Весь контент-місяць — за 1 день</div>
+        </div>
+
+        <div class="module">
+          <div class="module-num-badge">MODULE 02</div>
+          <h3>Lead Research — 50 B2B-лідів щотижня для менеджера</h3>
+          <p>
+            Автоматичний збір кав'ярень, ресторанів і готелів Києва з Google Maps і Instagram.
+            Збагачення контактами. Скоринг за релевантністю.
+            Щопонеділка — готовий список для менеджера без жодної ручної роботи.
+          </p>
+          <div class="module-replaces">Замінює: <span>Apify $49 + Clay.com ~$50</span></div>
+          <div class="module-result">50 кваліфікованих лідів кожного понеділка</div>
+        </div>
+
+        <div class="module">
+          <div class="module-num-badge">MODULE 03</div>
+          <h3>Visual Brief Engine — Брифи для фото і відеозйомок</h3>
+          <p>
+            Замість пустої задачі «зніміть щось» — конкретний мудборд, технічний бриф,
+            сценарій для кожного типу контенту. Бариста-амбасадор знає точно, що знімати.
+            Партнерська кав'ярня отримує UGC-інструкцію за 10 хвилин.
+          </p>
+          <div class="module-replaces">Замінює: <span>Годинна ручна підготовка на кожну зйомку</span></div>
+          <div class="module-result">UGC-програма запускається без арт-директора</div>
+        </div>
+
+        <div class="module">
+          <div class="module-num-badge">MODULE 04</div>
+          <h3>Weekly Report — Аналітика кожного понеділка о 9:00</h3>
+          <p>
+            Авторепорт по ключових метриках: нові B2B-ліди, конверсії, ефективність каналів,
+            активність контенту. Формат: Telegram-повідомлення + PDF для керівника.
+            Рішення приймаються на основі даних цього тижня, не минулого місяця.
+          </p>
+          <div class="module-replaces">Замінює: <span>Ручне зведення таблиць + Google Looker Studio налаштування</span></div>
+          <div class="module-result">Управлінський звіт без ручної роботи</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 STACK COMPARISON -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">04</span>
+        <span class="section-title-sm">Ваш план vs. AiUnit71</span>
+      </div>
+
+      <div class="compare-wrap">
+        <div class="compare-col current">
+          <div class="compare-col-head current">Ваш поточний план (9 інструментів)</div>
+          <div class="compare-item">
+            <span class="compare-item-name">CRM (Pipedrive / HubSpot)</span>
+            <span class="compare-item-cost">$15–25/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Чат-бот (Tidio / Manychat)</span>
+            <span class="compare-item-cost">$19–29/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Автопублікації (Buffer)</span>
+            <span class="compare-item-cost">$6–18/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">AI-тексти (ChatGPT Plus)</span>
+            <span class="compare-item-cost">$20/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">AI-відео (Heygen)</span>
+            <span class="compare-item-cost">$29–48/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Відбір фото (Imagen AI)</span>
+            <span class="compare-item-cost">$15–20/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Парсинг лідів (Apify)</span>
+            <span class="compare-item-cost">$49/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Email (Mailchimp)</span>
+            <span class="compare-item-cost">$13/міс</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Automation (Make.com)</span>
+            <span class="compare-item-cost">$9–16/міс</span>
+          </div>
+          <div class="compare-item" style="font-style:italic;color:var(--muted);font-size:12px;">
+            <span class="compare-item-name">+ Час на налаштування інтеграцій</span>
+            <span class="compare-item-cost">∞</span>
+          </div>
+          <div class="compare-total">
+            <span>Разом</span>
+            <span class="total-val">$175–247/міс</span>
+          </div>
+        </div>
+
+        <div class="compare-col aiunit">
+          <div class="compare-col-head aiunit">AiUnit71 (1 система)</div>
+          <div class="compare-item">
+            <span class="compare-item-name">Content Engine (SMM + описи + SEO)</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Lead Research (50 лідів / тиждень)</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Visual Brief Engine (UGC + зйомки)</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Weekly Report (авто щопонеділка)</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">TOV-замок (голос Escobar)</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Антислоп-фільтр</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Human approval на кожному виводі</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">Пам'ять системи зростає з часом</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item">
+            <span class="compare-item-name">CRM залишається вашим (не замінюємо)</span>
+            <span class="compare-item-cost">✓</span>
+          </div>
+          <div class="compare-item" style="font-style:italic;color:rgba(200,121,65,0.5);font-size:12px;">
+            <span class="compare-item-name">Час на налаштування інтеграцій</span>
+            <span class="compare-item-cost">3 дні</span>
+          </div>
+          <div class="compare-total">
+            <span>Інвестиція</span>
+            <span class="total-val">Value-based</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 HOW IT WORKS -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">05</span>
+        <span class="section-title-sm">Як це працює</span>
+      </div>
+
+      <div class="pipeline">
+        <div class="step">
+          <div class="step-actor">Команда Escobar</div>
+          <h4>Завдання або тема — 1 речення</h4>
+          <p>
+            "Зроби 4 пости про нову Ethiopian Yirgacheffe на наступний тиждень."
+            <strong>Більше нічого не потрібно.</strong> Система знає TOV, знає Escobar, знає формати.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-actor">AiUnit71 — BriefingRoom</div>
+          <h4>Деконструкція завдання</h4>
+          <p>
+            Система визначає: які формати потрібні, які агенти залучити,
+            скільки коштуватиме, які хуки використати для Ethiopian у B2B-контексті.
+            <strong>Ви бачите план до початку виробництва.</strong>
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-actor">AiUnit71 — Copywriting + Visual Brief Rooms</div>
+          <h4>Паралельне виробництво</h4>
+          <p>
+            Тексти і візуальні брифи генеруються одночасно.
+            TOV-фільтр перевіряє кожен вивід. Антислоп відхиляє генерик.
+            <strong>Ви отримуєте пакет, не спостерігаєте за процесом.</strong>
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-actor">Людина — Approval Gate</div>
+          <h4>Перегляд і публікація</h4>
+          <p>
+            <strong>Нічого не виходить без людського ока.</strong>
+            Approve → іде в Buffer / CRM / Telegram.
+            Правки → агент враховує і регенерує цільово.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-actor">AiUnit71 — Memory</div>
+          <h4>Система навчається на ваших рішеннях</h4>
+          <p>
+            Кожен затверджений пост і відхилений варіант — навчальний приклад.
+            <strong>Через місяць точність вища, ніж у перший день.</strong>
+            Голос Escobar у системі стає точнішим з кожним проєктом.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 ROADMAP -->
+  <section>
+    <div class="container">
+      <div class="section-eyebrow">
+        <span class="section-num">06</span>
+        <span class="section-title-sm">Ваш роадмап + AiUnit71</span>
+      </div>
+
+      <div class="roadmap-grid">
+        <div class="roadmap-phase">
+          <div class="phase-label">Фаза 1</div>
+          <div class="phase-name">Фундамент</div>
+          <div class="phase-timeline">Місяць 1–2</div>
+          <div class="phase-items">
+            <div class="phase-item">
+              <strong>TOV-документ Escobar</strong>
+              <span>→ стає системним промптом</span>
+            </div>
+            <div class="phase-item">
+              <strong>17+ описів кави на сайт</strong>
+              <span>→ SEO + смаковий профіль</span>
+            </div>
+            <div class="phase-item">
+              <strong>Перший контент-місяць</strong>
+              <span>→ Instagram + LinkedIn</span>
+            </div>
+            <div class="phase-item">
+              <strong>Перша база лідів</strong>
+              <span>→ 500 B2B-контактів Київ</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-phase">
+          <div class="phase-label">Фаза 2</div>
+          <div class="phase-name">Контент-машина</div>
+          <div class="phase-timeline">Місяць 2–4</div>
+          <div class="phase-items">
+            <div class="phase-item">
+              <strong>UGC-програма для партнерів</strong>
+              <span>→ брифи, інструкції, формати</span>
+            </div>
+            <div class="phase-item">
+              <strong>Weekly lead report</strong>
+              <span>→ 50 лідів кожного понеділка</span>
+            </div>
+            <div class="phase-item">
+              <strong>SEO-статті (2/міс)</strong>
+              <span>→ B2B-запити, HoReCa</span>
+            </div>
+            <div class="phase-item">
+              <strong>Cold email кампанія</strong>
+              <span>→ перший аутріч до бази</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-phase">
+          <div class="phase-label">Фаза 3</div>
+          <div class="phase-name">Масштаб</div>
+          <div class="phase-timeline">Місяць 4–6</div>
+          <div class="phase-items">
+            <div class="phase-item">
+              <strong>Weekly management report</strong>
+              <span>→ авто кожного понеділка</span>
+            </div>
+            <div class="phase-item">
+              <strong>LinkedIn B2B outreach</strong>
+              <span>→ HoReCa закупники</span>
+            </div>
+            <div class="phase-item">
+              <strong>Virtual catalogue copy</strong>
+              <span>→ описи обладнання, відеобрифи</span>
+            </div>
+            <div class="phase-item">
+              <strong>Реферальна програма</strong>
+              <span>→ механіка + контент</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 PILOT -->
+  <section style="padding: 0; border-bottom: none;">
+    <div class="container">
+      <div style="padding: 80px 0;">
+        <div class="section-eyebrow">
+          <span class="section-num">07</span>
+          <span class="section-title-sm">Перший крок</span>
+        </div>
+        <div class="pilot-container">
+          <h3>Пілот: Описи 17+ сортів кави + перший контент-місяць</h3>
+          <p>
+            Починаємо з найшвидшого ROI. Ніякого ретейнера.
+            <strong>Один конкретний результат — і ви вирішуєте, що далі.</strong>
+          </p>
+          <p>
+            За тиждень ви отримуєте готові SEO-описи для всього каталогу
+            і перший місяць контент-плану для Instagram + LinkedIn.
+            Це вже дає результат <strong>до будь-якого рішення про довгострокову роботу.</strong>
+          </p>
+
+          <div class="pilot-deliverables">
+            <div class="pilot-deliverable">
+              <strong>17+ SEO-описів кави</strong>
+              <span>У TOV Escobar, зі смаковим профілем, способами заварювання, B2B-кутом</span>
+            </div>
+            <div class="pilot-deliverable">
+              <strong>4 тижні контент-плану</strong>
+              <span>Instagram + LinkedIn, рубрики, хуки, готові тексти для публікації</span>
+            </div>
+            <div class="pilot-deliverable">
+              <strong>TOV-документ Escobar</strong>
+              <span>Формалізований голос бренду — залишається у вас назавжди</span>
+            </div>
+            <div class="pilot-deliverable">
+              <strong>Перший список 50 лідів</strong>
+              <span>B2B-контакти Київ з Google Maps — кваліфіковані, готові до аутрічу</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <section class="closing-section">
+    <div class="container">
+      <div class="closing-statement">
+        Стратегія у вас є.<br>
+        Інструменти <em>не потрібні.</em><br>
+        Потрібна система.
+      </div>
+      <div class="closing-grid">
+        <div class="closing-block">
+          <div class="cl-label">Система</div>
+          <div class="cl-value">AiUnit71</div>
+        </div>
+        <div class="closing-block">
+          <div class="cl-label">Документ</div>
+          <div class="cl-value">КП-002 // Конфіденційно</div>
+        </div>
+        <div class="closing-block">
+          <div class="cl-label">Дата</div>
+          <div class="cl-value">Березень 2026</div>
+        </div>
+        <div class="closing-block">
+          <div class="cl-label">Адресат</div>
+          <div class="cl-value">Escobar Coffee</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-brand">AIUNIT71 — AI Production Layer</div>
+      <div class="footer-doc">КП-002 // ESCOBAR COFFEE // 2026 // КОНФІДЕНЦІЙНО</div>
+    </div>
+  </footer>
+
+</body>
+</html>

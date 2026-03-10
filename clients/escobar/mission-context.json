@@ -1,0 +1,229 @@
+{
+  "mission": {
+    "id": "mission-escobar-content-pilot-001",
+    "type": "content_pipeline",
+    "client": "Escobar Coffee",
+    "status": "active",
+    "created": "2026-03-08T00:00:00Z",
+    "language": "uk",
+    "autonomy_level": 1,
+    "hitl_required": true,
+    "budget": {
+      "total": 0,
+      "spent": 0,
+      "reserved": 0,
+      "currency": "USD",
+      "note": "Pilot — budget TBD after scope confirmation"
+    },
+    "deliverables": [
+      {
+        "id": "tov_document",
+        "label": "TOV-документ",
+        "description": "Tone of Voice document — voice rules, banned words, sentence patterns, example posts",
+        "status": "pending",
+        "priority": 1,
+        "agent": "Copywriter",
+        "skills": ["copywriting", "anti-slop"]
+      },
+      {
+        "id": "product_descriptions",
+        "label": "Описи 17+ сортів кави",
+        "description": "SEO-optimized product descriptions for all coffee varieties. Template: назва + країна + обробка + смаковий профіль + спосіб заварювання + B2B angle",
+        "status": "pending",
+        "priority": 2,
+        "agent": "Copywriter",
+        "skills": ["copywriting", "anti-slop"],
+        "quantity": 17,
+        "format": "Ukrainian + optional English version"
+      },
+      {
+        "id": "social_content_calendar",
+        "label": "Контент-план на 4 тижні",
+        "description": "LinkedIn + Instagram content calendar. Posts, hooks, copy drafts, visual direction for each post.",
+        "status": "pending",
+        "priority": 3,
+        "agent": "SMMAgent",
+        "skills": ["social-content", "copywriting", "anti-slop"],
+        "platforms": ["LinkedIn", "Instagram"],
+        "quantity": "20-28 posts (5-7 per week)",
+        "format": "Hook + body + CTA + hashtags + visual brief"
+      }
+    ]
+  },
+
+  "brand": {
+    "name": "Escobar Coffee",
+    "website": "escobar.coffee (assumed)",
+    "location": "Kyiv, Ukraine",
+    "business_model": "B2B coffee supplier — HoReCa, offices, corporate clients",
+    "founded_stage": "Scaling — transition from fixed office to distributed partner model",
+    "colors": {
+      "primary": "#FF5100",
+      "primary_name": "PANTONE Orange 021 C",
+      "secondary": "#00303C",
+      "secondary_name": "PANTONE 547 C",
+      "neutral_dark": "#636569",
+      "neutral_dark_name": "PANTONE Cool Gray 10 C",
+      "neutral_light": "#D6D1CA",
+      "neutral_light_name": "PANTONE Warm Grey 1 C"
+    },
+    "fonts": ["Inter", "IBM Plex Mono"],
+    "logo_assets": [
+      "img/Asset 3.svg (dark teal version — for light backgrounds)",
+      "img/Asset 4.svg (orange version — for dark backgrounds)"
+    ],
+    "mood": [
+      "professional",
+      "systematic",
+      "reliable",
+      "premium without pretension",
+      "B2B-first"
+    ],
+    "anti_patterns": [
+      "lifestyle coffee cliches",
+      "hipster aesthetic",
+      "overly emotional language",
+      "stock photo feel",
+      "consumer-brand tone (this is B2B)",
+      "vague promises without specifics",
+      "Ukrainian generic warm-fuzzy copy"
+    ],
+    "competitors": [
+      "Mad Heads Coffee",
+      "Kyiv City Roast"
+    ]
+  },
+
+  "audience": {
+    "primary": {
+      "segment": "B2B buyers — HoReCa",
+      "roles": ["cafe owners", "restaurant managers", "HoReCa procurement managers", "hotel F&B managers"],
+      "pain_points": [
+        "Unreliable supplier delivery",
+        "Inconsistent coffee quality between batches",
+        "Barista training burden",
+        "Equipment maintenance complexity",
+        "No dedicated account manager"
+      ],
+      "language": "Practical, specific, numbers-first. They don't care about origin stories — they care about margin, consistency, and service.",
+      "decision_criteria": ["price stability", "delivery reliability", "equipment support", "training included"]
+    },
+    "secondary": {
+      "segment": "Office / corporate",
+      "roles": ["office managers", "HR managers"],
+      "pain_points": [
+        "Coffee machine breakdowns with no support",
+        "Overpaying for low-quality beans",
+        "No subscription/auto-delivery option"
+      ]
+    }
+  },
+
+  "products": {
+    "coffee_varieties": {
+      "count": "17+",
+      "status": "no descriptions yet — PILOT DELIVERABLE",
+      "description_template": "Назва: [name]. Країна: [origin]. Обробка: [process — washed/natural/honey]. Смаковий профіль: [flavor notes from scale]. Рекомендований спосіб: [espresso/filter/both]. B2B-angle: [why this variety works for cafe/office/horeca context].",
+      "tone_for_descriptions": "Professional, concise, no purple prose. Flavor notes are factual. B2B angle is practical."
+    },
+    "equipment": {
+      "type": "Rental + sale of espresso machines and grinders",
+      "catalog_format": "Online catalog with AR elements (in development)",
+      "showroom": "Minimal showroom in central Kyiv — for final decision only"
+    },
+    "services": [
+      "Barista training (on-site at partner's location)",
+      "Equipment rental",
+      "Regular delivery",
+      "B2B referral program (in development)"
+    ]
+  },
+
+  "tov": {
+    "status": "TO BE CREATED — first deliverable",
+    "known_rules": [
+      "No exclamation marks in B2B communication",
+      "Numbers over adjectives: '3-day delivery' not 'fast delivery'",
+      "Partner language: speak to them as business equals",
+      "Ukrainian throughout — no Russianisms",
+      "Active voice, short sentences",
+      "Never: 'якісна кава', 'найкращий постачальник', 'ми найкращі'"
+    ],
+    "voice_direction": "A systematic, experienced B2B supplier who doesn't need to shout. Confident. Specific. Respects the client's time.",
+    "examples_needed": true,
+    "banned_words": [
+      "якісний", "найкращий", "унікальний", "революційний",
+      "смачна кава", "любов до кави", "пристрасть", "магія"
+    ]
+  },
+
+  "content_strategy": {
+    "platforms": {
+      "linkedin": {
+        "objective": "B2B lead generation + thought leadership in HoReCa",
+        "posting_frequency": "3-4x per week",
+        "content_pillars": [
+          "Industry expertise: HoReCa market insights (30%)",
+          "Product/education: coffee variety spotlights, brew guides for baristas (25%)",
+          "Behind the scenes: roasting process, sourcing, quality control (20%)",
+          "Partner stories: case studies from partner cafes (15%)",
+          "Business tips for cafe owners (10%)"
+        ],
+        "formats": ["text posts with hooks", "carousels (PDF)", "short video clips"],
+        "CTA_style": "Soft B2B — 'Зв'яжіться з нами' or 'Замовте тестову партію'"
+      },
+      "instagram": {
+        "objective": "Brand awareness + partner UGC showcase + product visibility",
+        "posting_frequency": "1 post + 3-5 Stories daily",
+        "content_pillars": [
+          "Product shots: coffee varieties (30%)",
+          "Partner cafes: UGC and collabs (25%)",
+          "Process: roasting, packaging, delivery (25%)",
+          "Educational: brew guides, tips for baristas (20%)"
+        ],
+        "formats": ["Reels (15-30s)", "Carousels", "Product singles"],
+        "visual_style": "Warm but structured. Orange accent. Real environments — not studio white. Slight film grain."
+      }
+    }
+  },
+
+  "style_constraints": {
+    "no_stock_feel": true,
+    "no_text_in_image": false,
+    "anti_slop": true,
+    "language": "Ukrainian (primary), English (secondary for LinkedIn international reach)",
+    "copy_style": "B2B professional — not corporate robot, not lifestyle blog",
+    "visual_direction": "Warm, amber tones. Real roastery / real cafe environments. Orange brand color as accent only — not overwhelming.",
+    "safe_zone_for_text": "bottom 30% for Instagram, full overlay allowed for LinkedIn carousels"
+  },
+
+  "client_taste_profile": {
+    "color_temperature": "warm",
+    "contrast": "medium-high",
+    "composition": "asymmetric, dynamic",
+    "lighting_preference": "warm ambient > cold studio",
+    "human_presence": "occasional — baristas, partners. Not stock-model people.",
+    "texture_preference": "real materials — burlap, wood, ceramic, steam",
+    "aesthetic_reference": "premium craft B2B — think Lavazza B2B comms, not Blue Bottle consumer",
+    "what_to_avoid": "White marble flat lay. Cold blue tones. Overly perfect symmetry. Consumer lifestyle clichés."
+  },
+
+  "pipeline": {
+    "phase_1_active": "TOV document → product descriptions",
+    "phase_2_queued": "Social content calendar (4 weeks)",
+    "phase_3_future": "CRM setup + chatbot scripts + lead gen sequences",
+    "hitl_gates": [
+      "TOV document — client must approve before any copy is produced",
+      "First 3 product descriptions — client approves template before batch run",
+      "Content calendar — client approves week 1 before scheduling"
+    ]
+  },
+
+  "contacts": {
+    "note": "To be filled during onboarding call",
+    "client_name": "TBD",
+    "client_role": "TBD",
+    "communication_channel": "TBD",
+    "preferred_review_cadence": "TBD"
+  }
+}

@@ -12,7 +12,9 @@ import { TaskStatus as TS } from "../core/types.js";
 import { eventBus } from "../core/event-bus.js";
 import { roomLogger } from "../core/logger.js";
 import { MemoryStore } from "../memory/memory-store.js";
+import { McpHost } from "../mcp/host.js";
 import { CostRouter, type RouteRequest } from "../cost/router.js";
+import type { LlmClient, ChatMessage, ChatRequest, ChatResponse } from "../llm/llm-client.js";
 import type winston from "winston";
 
 /**
@@ -29,16 +31,19 @@ export abstract class BaseRoom {
   readonly config: RoomConfig;
   protected state: RoomState;
   protected memory: MemoryStore;
+  protected mcpHost: McpHost;
   protected costRouter: CostRouter;
   protected log: winston.Logger;
 
   constructor(
     config: RoomConfig,
     memory: MemoryStore,
+    mcpHost: McpHost,
     costRouter: CostRouter
   ) {
     this.config = config;
     this.memory = memory;
+    this.mcpHost = mcpHost;
     this.costRouter = costRouter;
     this.log = roomLogger(config.id);
 
@@ -220,6 +225,69 @@ export abstract class BaseRoom {
   /** Find the best idle agent for a task */
   protected findIdleAgent(task: Task): AgentInstance | undefined {
     return this.state.agents.find((a) => a.status === "idle");
+  }
+
+  /**
+   * Run an LLM chat with MCP tool-use loop.
+   * Fetches available MCP tools, passes them to the LLM, and handles
+   * tool_call responses by executing them via McpHost and continuing
+   * the conversation until the LLM returns a final text response.
+   */
+  protected async runWithTools(
+    llm: LlmClient,
+    request: Omit<ChatRequest, "tools">,
+    maxToolRounds = 5
+  ): Promise<ChatResponse> {
+    const mcpTools = await this.mcpHost.getAvailableTools();
+    const llmTools = mcpTools.map((t) => ({
+      type: "function" as const,
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.inputSchema as Record<string, unknown>,
+      },
+    }));
+
+    const messages: ChatMessage[] = [...request.messages];
+    let response: ChatResponse | null = null;
+
+    for (let round = 0; round < maxToolRounds; round++) {
+      response = await llm.chat({
+        ...request,
+        messages,
+        tools: llmTools.length > 0 ? llmTools : undefined,
+      });
+
+      if (!response.tool_calls || response.tool_calls.length === 0) {
+        break; // Final text response — done
+      }
+
+      // Add assistant tool-call message
+      messages.push({
+        role: "assistant",
+        content: response.content || "",
+      });
+
+      // Execute each tool call and add results
+      for (const tc of response.tool_calls) {
+        let toolResult: string;
+        try {
+          const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+          toolResult = await this.mcpHost.callTool(tc.function.name, args);
+          this.log.debug(`[MCP] Tool ${tc.function.name} executed successfully`);
+        } catch (err) {
+          toolResult = `Error: ${err instanceof Error ? err.message : String(err)}`;
+          this.log.warn(`[MCP] Tool ${tc.function.name} failed: ${toolResult}`);
+        }
+
+        messages.push({
+          role: "tool" as any,
+          content: toolResult,
+        });
+      }
+    }
+
+    return response!;
   }
 
   /** Room-specific task processing — must be implemented by each room */

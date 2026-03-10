@@ -2,6 +2,7 @@ import type { RoomConfig, Task, CostRecord, SkillRef } from "../core/types.js";
 import { AutonomyLevel } from "../core/types.js";
 import { BaseRoom } from "./base-room.js";
 import type { MemoryStore } from "../memory/memory-store.js";
+import type { McpHost } from "../mcp/host.js";
 import type { CostRouter } from "../cost/router.js";
 import { LlmClient } from "../llm/llm-client.js";
 import type { ChatMessage } from "../llm/llm-client.js";
@@ -46,8 +47,8 @@ export class LearningRoom extends BaseRoom {
     private skillMaster: SkillMaster;
     private skillsDir: string;
 
-    constructor(memory: MemoryStore, costRouter: CostRouter, skillsDir?: string) {
-        super(CONFIG, memory, costRouter);
+    constructor(memory: MemoryStore, mcpHost: McpHost, costRouter: CostRouter, skillsDir?: string) {
+        super(CONFIG, memory, mcpHost, costRouter);
         this.skillsDir = skillsDir ?? DEFAULT_SKILLS_DIR;
         this.llm = new LlmClient();
         this.scanner = new SkillScanner();
@@ -118,7 +119,7 @@ export class LearningRoom extends BaseRoom {
         let proficiency: SkillRef["proficiency"] = "novice";
 
         try {
-            const response = await this.llm.chat({
+            const response = await this.runWithTools(this.llm, {
                 model: route.selected.model,
                 messages,
                 temperature: 0.5,
